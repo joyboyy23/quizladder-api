@@ -2,17 +2,23 @@
 // You do NOT need to change this file. Your work is in results.repository.js.
 const resultsRepository = require('../repositories/results.repository');
 
-// Ranks completed players by score. Equal scores share a rank: 1, 1, 3 ...
+// Ranks completed players in the order they finished (every finisher scores 100).
+// An equal finish_position shares a rank: 1, 1, 3 ...
+// Players who did not finish come last, by score, with no rank.
 function rankPlayers(players) {
-  const sorted = [...players].sort((a, b) => b.score - a.score || a.nickname.localeCompare(b.nickname));
+  const order = (p) => (p.completed ? p.finish_position ?? Infinity : Infinity);
+  const sorted = [...players].sort((a, b) => Number(b.completed) - Number(a.completed)
+    || order(a) - order(b)
+    || b.score - a.score
+    || a.nickname.localeCompare(b.nickname));
   let rank = 0;
-  let previous = null;
+  let previous;
   let seen = 0;
-  return sorted.map((player) => {
+  return sorted.map(({ finish_position: finishPosition, ...player }) => {
     if (player.completed) {
       seen += 1;
-      if (player.score !== previous) rank = seen;
-      previous = player.score;
+      if (finishPosition == null || finishPosition !== previous) rank = seen;
+      previous = finishPosition;
     }
     return { ...player, rank: player.completed ? rank : null };
   });
@@ -37,6 +43,7 @@ async function listFinishedGames(since) {
       nickname: String(row.nickname),
       score: Number(row.score),
       completed: Boolean(row.completed),
+      finish_position: row.finish_position === null ? null : Number(row.finish_position),
     });
   }
 
