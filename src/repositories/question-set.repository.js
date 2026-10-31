@@ -1,0 +1,24 @@
+// The only file that queries question_sets.
+const { QuestionSet } = require('../models');
+
+function findAll() {
+  return QuestionSet.findAll({ order: [['question_set_id', 'ASC']] });
+}
+
+function findById(id) {
+  return QuestionSet.findByPk(id);
+}
+
+function create(data) {
+  return QuestionSet.create(data);
+}
+
+function update(questionSet, changes) {
+  return questionSet.update(changes);
+}
+
+function remove(questionSet) {
+  return questionSet.destroy();
+}
+
+module.exports = { findAll, findById, create, update, remove };
