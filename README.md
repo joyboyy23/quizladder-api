@@ -60,6 +60,69 @@ Base URL: `http://localhost:3001/api/v1`
 
 To test `/results` locally (for example in Postman), add the request header `X-Hub-Key: dev-hub-key`. A plain browser visit cannot send it, so it always gets 401.
 
+## Auth for Modules 1 and 2
+
+Until Week 12 login exists, send who you are with `X-Demo-User: <school_id>`. Missing or unknown IDs get `401 AUTH_REQUIRED`.
+
+## Module 1 endpoints (question sets)
+
+Only `FACULTY` and `STAFF` may manage question sets.
+
+| Method | Path | Purpose | Success |
+|---|---|---|---|
+| GET | /question-sets | List all sets | 200 |
+| POST | /question-sets | Create a set (`name` 3–100 chars) | 201 |
+| GET | /question-sets/:id | Read one set | 200 |
+| PATCH | /question-sets/:id | Rename a set | 200 |
+| DELETE | /question-sets/:id | Delete an unused set | 204 |
+
+Rules worth knowing:
+
+- Students get `403 FORBIDDEN`.
+- Set names are unique: a duplicate returns `409 NAME_TAKEN`.
+- A set that was used in a game cannot be deleted: `409 QUESTION_SET_IN_USE`.
+- Responses use a public `id` field (not the internal `question_set_id`).
+
+Demo school IDs for Postman (`postman/QuizLadder-Module1-QuestionSets.postman_collection.json`):
+
+| Header | Account | Useful for |
+|---|---|---|
+| `FAC-0042` | Faye Bautista (FACULTY) | Full CRUD on question sets |
+| `2023-00456` | Ben Reyes (STUDENT) | Wrong-role / forbidden tests |
+
+## Module 2 endpoints (sessions and players)
+
+| Method | Path | Purpose | Success |
+|---|---|---|---|
+| POST | /sessions | Faculty/staff starts a lobby (`WAITING`), server makes a six-digit `code` | 201 |
+| GET | /sessions/:code | Read a game by join code | 200 |
+| PATCH | /sessions/:code | Set `status` to `PLAYING` or `FINISHED` (faculty/staff) | 200 |
+| POST | /sessions/:code/players | Join a lobby, or rejoin an existing seat | 201 new / 200 rejoin |
+| GET | /sessions/:code/players | List seats ordered by board position | 200 |
+
+Request bodies:
+
+- **POST /sessions:** `{ "question_set_id": 1 }` — server picks the join `code`, starts as `WAITING`, and creates a board. Clients cannot choose the code.
+- **PATCH /sessions/:code:** `{ "status": "PLAYING" }` or `{ "status": "FINISHED" }` — required; an empty body returns `400 VALIDATION_FAILED`.
+- **POST /sessions/:code/players:** `{ "nickname": "Bea", "avatar_color": "BLUE" }` — `avatar_color` is one of `RED`, `BLUE`, `GREEN`, `YELLOW`.
+
+Rules worth knowing:
+
+- `session_id` never leaves the API. Join responses use `rejoined` and board `position` (there is no `score` field).
+- One game at a time: an account seated in another `PLAYING` game gets `409 ALREADY_IN_GAME` when joining a *new* lobby. Rejoining their own seat still works (`200`, same `player_id` / `position`).
+- Soft capacity is 4 players (`game-info.max_players`). Nickname and avatar color must be unique inside a session.
+- Closing a game sets `FINISHED` and `finished_at`, so it appears in `/results`.
+
+Demo school IDs for Postman (`postman/QuizLadder-Module2-Sessions.postman_collection.json`), after a fresh `db:seed`:
+
+| Header | Account | Useful for |
+|---|---|---|
+| `FAC-0042` | Faye Bautista (FACULTY) | Create / start / finish sessions (also seated in PLAYING `735104`) |
+| `2023-00456` | Ben Reyes | Clean join of a new lobby |
+| `2023-00789` / `2024-00111` | Carla / Dino | Extra free joiners (only in FINISHED `482913`) |
+| `2023-00123` | Ana Dela Cruz | In PLAYING `735104` — one-game + rejoin tests |
+| `2024-00222` | Eli Gonzales | Also in PLAYING `735104` (not a free joiner) |
+
 ## What "completed" means in my game
 
 A player has completed the game when they land exactly on tile 100 on the Snakes and Ladders board (a roll that goes past 100 bounces back) and their `finished_at` timestamp is recorded. The game session is marked as `FINISHED` when the top 3 players have finished, or when the host ends the game.

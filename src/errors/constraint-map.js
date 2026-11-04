@@ -17,4 +17,14 @@ module.exports = {
     code: 'QUESTION_SET_IN_USE',
     message: 'This question set was used in a game and cannot be deleted.',
   },
+  players_session_id_nickname_unique: {
+    status: 409,
+    code: 'NICKNAME_TAKEN',
+    message: 'That nickname is already used in this game.',
+  },
+  players_session_id_avatar_color_unique: {
+    status: 409,
+    code: 'AVATAR_COLOR_TAKEN',
+    message: 'That avatar color is already used in this game.',
+  },
 };
