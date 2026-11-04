@@ -1,12 +1,12 @@
 'use strict';
 
 // Demo data for QuizLadder: one finished game (3 players reached tile 100
-// exactly) and one game still in progress.
+// exactly), one game still in progress, and one waiting lobby.
 
 const SCHOOL_IDS = ['2023-00123', '2023-00456', '2023-00789', '2024-00111', '2024-00222', 'FAC-0042'];
-const JOIN_CODES = ['482913', '735104'];
-const HOST_USERNAME = 'librarian';
-const QUESTION_SET_NAME = 'Library Basics';
+const JOIN_CODES = ['482913', '735104', '901276'];
+const HOST_USERNAMES = ['librarian', 'moderator', 'assistant'];
+const QUESTION_SET_NAMES = ['Library Basics', 'Research Skills', 'Citation Rules'];
 
 const LADDERS = { 4: 25, 13: 46, 33: 49, 42: 63, 50: 69, 74: 92 };
 const SNAKES = { 27: 5, 40: 3, 43: 18, 54: 31, 62: 19, 66: 45, 76: 58, 89: 53, 95: 75, 98: 78 };
@@ -33,6 +33,29 @@ function buildTiles(boardId) {
 
 const at = (iso) => new Date(iso);
 
+function questionRowsFor(questionSetId, questionData) {
+  return questionData.map(([text]) => ({
+    question_set_id: questionSetId,
+    question_text: text,
+  }));
+}
+
+function answersFor(questions, questionData) {
+  const answers = [];
+  questions.forEach((q, i) => {
+    const [, choices, correct] = questionData[i];
+    choices.forEach((answerText, c) => {
+      answers.push({
+        question_id: q.question_id,
+        choice_index: c + 1,
+        answer_text: answerText,
+        is_correct: c + 1 === correct,
+      });
+    });
+  });
+  return answers;
+}
+
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface) {
@@ -50,42 +73,54 @@ module.exports = {
       const [ana, ben, carla, dino, eli, faye] = users.map((u) => u.user_id);
 
       // Demo only: not a real password hash.
-      const [host] = await insert('hosts', [
-        { username: HOST_USERNAME, password_hash: 'demo-only-not-a-real-hash' },
+      const demoHash = 'demo-only-not-a-real-hash';
+      const [host, host2] = await insert('hosts', [
+        { username: HOST_USERNAMES[0], password_hash: demoHash },
+        { username: HOST_USERNAMES[1], password_hash: demoHash },
+        { username: HOST_USERNAMES[2], password_hash: demoHash },
       ]);
 
-      const [questionSet] = await insert('question_sets', [{ name: QUESTION_SET_NAME }]);
+      const [questionSet, researchSet, citationSet] = await insert(
+        'question_sets',
+        QUESTION_SET_NAMES.map((name) => ({ name }))
+      );
 
-      const questionData = [
+      const libraryQuestions = [
         ['What system do most libraries use to arrange books by subject?', ['Dewey Decimal Classification', 'Alphabetical by color', 'Date of purchase', 'Page count'], 1],
         ['What do you need to borrow a book from the SorSU library?', ['A library card or school ID', 'A bus ticket', 'A phone charger', 'Nothing at all'], 1],
         ['Which part of a book lists topics and the pages they appear on?', ['Cover', 'Index', 'Spine', 'Dedication'], 2],
         ['What does OPAC stand for?', ['Open Print Access Center', 'Online Public Access Catalog', 'Official Paper Archive Copy', 'Optical Page Scanner'], 2],
         ['Which of these should you NOT do in the library?', ['Return books on time', 'Ask the librarian for help', 'Eat noisy snacks near the shelves', 'Use the catalog'], 3],
       ];
+      const researchQuestions = [
+        ['What is a peer-reviewed journal article?', ['An article checked by experts in the field before publication', 'Any blog post about science', 'A newspaper editorial', 'A social media thread'], 1],
+        ['Where should you start when researching a new topic?', ['Background sources like encyclopedias or textbooks', 'Random websites only', 'Skipping the catalog', 'Ignoring keywords'], 1],
+      ];
+      const citationQuestions = [
+        ['In APA style, which part usually appears first in a reference?', ['Author name', 'Publisher city', 'Page count', 'Library call number'], 1],
+        ['Why do academic papers include citations?', ['To credit sources and let readers find them', 'To make the paper longer', 'To hide the author name', 'To replace the bibliography'], 1],
+      ];
 
-      const questions = await insert(
-        'questions',
-        questionData.map(([text]) => ({ question_set_id: questionSet.question_set_id, question_text: text }))
+      const questions = await insert('questions', [
+        ...questionRowsFor(questionSet.question_set_id, libraryQuestions),
+        ...questionRowsFor(researchSet.question_set_id, researchQuestions),
+        ...questionRowsFor(citationSet.question_set_id, citationQuestions),
+      ]);
+      const libraryQs = questions.slice(0, libraryQuestions.length);
+      const researchQs = questions.slice(libraryQuestions.length, libraryQuestions.length + researchQuestions.length);
+      const citationQs = questions.slice(libraryQuestions.length + researchQuestions.length);
+
+      await insert('answers', [
+        ...answersFor(libraryQs, libraryQuestions),
+        ...answersFor(researchQs, researchQuestions),
+        ...answersFor(citationQs, citationQuestions),
+      ]);
+      const [q1, q2, q3] = libraryQs.map((q) => q.question_id);
+
+      const [board1, board2, board3] = (await insert('boards', [{ size: 100 }, { size: 100 }, { size: 100 }])).map(
+        (b) => b.board_id
       );
-
-      const answers = [];
-      questions.forEach((q, i) => {
-        const [, choices, correct] = questionData[i];
-        choices.forEach((answerText, c) => {
-          answers.push({
-            question_id: q.question_id,
-            choice_index: c + 1,
-            answer_text: answerText,
-            is_correct: c + 1 === correct,
-          });
-        });
-      });
-      await insert('answers', answers);
-      const [q1, q2, q3] = questions.map((q) => q.question_id);
-
-      const [board1, board2] = (await insert('boards', [{ size: 100 }, { size: 100 }])).map((b) => b.board_id);
-      await insert('tiles', [...buildTiles(board1), ...buildTiles(board2)]);
+      await insert('tiles', [...buildTiles(board1), ...buildTiles(board2), ...buildTiles(board3)]);
 
       const [finished, playing] = (await insert('game_sessions', [
         {
@@ -106,6 +141,16 @@ module.exports = {
           status: 'PLAYING',
           created_at: at('2026-10-14T01:55:00Z'),
           started_at: at('2026-10-14T02:00:00Z'),
+          finished_at: null,
+        },
+        {
+          host_id: host2.host_id,
+          question_set_id: researchSet.question_set_id,
+          board_id: board3,
+          join_code: JOIN_CODES[2],
+          status: 'WAITING',
+          created_at: at('2026-10-15T03:00:00Z'),
+          started_at: null,
           finished_at: null,
         },
       ])).map((s) => s.session_id);
@@ -159,7 +204,7 @@ module.exports = {
     await queryInterface.sequelize.transaction(async (transaction) => {
       const run = (sql, replacements) => queryInterface.sequelize.query(sql, { transaction, replacements });
       const sessions = 'SELECT session_id FROM game_sessions WHERE join_code IN (:codes)';
-      const sets = 'SELECT question_set_id FROM question_sets WHERE name = :setName';
+      const sets = 'SELECT question_set_id FROM question_sets WHERE name IN (:setNames)';
       const codes = { codes: JOIN_CODES };
 
       await run(`DELETE FROM turns WHERE session_id IN (${sessions})`, codes);
@@ -171,10 +216,12 @@ module.exports = {
         await run('DELETE FROM tiles WHERE board_id IN (:boardIds)', { boardIds });
         await run('DELETE FROM boards WHERE board_id IN (:boardIds)', { boardIds });
       }
-      await run(`DELETE FROM answers WHERE question_id IN (SELECT question_id FROM questions WHERE question_set_id IN (${sets}))`, { setName: QUESTION_SET_NAME });
-      await run(`DELETE FROM questions WHERE question_set_id IN (${sets})`, { setName: QUESTION_SET_NAME });
-      await run('DELETE FROM question_sets WHERE name = :setName', { setName: QUESTION_SET_NAME });
-      await run('DELETE FROM hosts WHERE username = :username', { username: HOST_USERNAME });
+      await run(`DELETE FROM answers WHERE question_id IN (SELECT question_id FROM questions WHERE question_set_id IN (${sets}))`, {
+        setNames: QUESTION_SET_NAMES,
+      });
+      await run(`DELETE FROM questions WHERE question_set_id IN (${sets})`, { setNames: QUESTION_SET_NAMES });
+      await run('DELETE FROM question_sets WHERE name IN (:setNames)', { setNames: QUESTION_SET_NAMES });
+      await run('DELETE FROM hosts WHERE username IN (:usernames)', { usernames: HOST_USERNAMES });
       await run('DELETE FROM users WHERE school_id IN (:schoolIds)', { schoolIds: SCHOOL_IDS });
     });
   },
