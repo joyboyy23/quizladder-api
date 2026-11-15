@@ -1,11 +1,11 @@
-# Development journey: [your game title] API
+# Development journey: QuizLadder API
 
-Student: [your name] · Section: [3-1 or 3-2] · Group: [group name]
+Student: Joenilo Estillero · Section: 3-1 · Group: 8
 
 One entry per milestone, written the week you did it. Newest at the bottom.
 
 ## M1 · Accounts, passwords and tokens
-- Dates worked: [e.g. Nov 4 to Nov 7, 2026] · Time spent: [hours]
+- Dates worked: [Nov 12 to Nov 7, 2026] · Time spent: [hours]
 - Goal: [one sentence]
 - What I built: [files and endpoints]
 - Evidence: [pull request link] · [two or three commit hashes]

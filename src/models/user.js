@@ -32,9 +32,9 @@ module.exports = (sequelize, DataTypes) => {
         role: {
           type: DataTypes.STRING(20),
           allowNull: false,
-          defaultValue: 'STUDENT',
+          defaultValue: 'PLAYER',
           validate: {
-            isIn: [['STUDENT', 'FACULTY', 'STAFF']],
+            isIn: [['PLAYER', 'HOST', 'ADMIN']],
           },
         },
   

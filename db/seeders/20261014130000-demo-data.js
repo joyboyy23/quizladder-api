@@ -63,12 +63,12 @@ module.exports = {
       const insert = (table, rows) => queryInterface.bulkInsert(table, rows, { transaction, returning: true });
 
       const users = await insert('users', [
-        { school_id: SCHOOL_IDS[0], full_name: 'Ana Dela Cruz', email: 'ana.delacruz@sorsu.edu.ph', role: 'STUDENT' },
-        { school_id: SCHOOL_IDS[1], full_name: 'Ben Reyes', email: 'ben.reyes@sorsu.edu.ph', role: 'STUDENT' },
-        { school_id: SCHOOL_IDS[2], full_name: 'Carla Santos', email: 'carla.santos@sorsu.edu.ph', role: 'STUDENT' },
-        { school_id: SCHOOL_IDS[3], full_name: 'Dino Villanueva', email: 'dino.villanueva@sorsu.edu.ph', role: 'STUDENT' },
-        { school_id: SCHOOL_IDS[4], full_name: 'Eli Gonzales', email: 'eli.gonzales@sorsu.edu.ph', role: 'STUDENT' },
-        { school_id: SCHOOL_IDS[5], full_name: 'Faye Bautista', email: 'faye.bautista@sorsu.edu.ph', role: 'FACULTY' },
+        { school_id: SCHOOL_IDS[0], full_name: 'Ana Dela Cruz', email: 'ana.delacruz@sorsu.edu.ph', role: 'PLAYER' },
+        { school_id: SCHOOL_IDS[1], full_name: 'Ben Reyes', email: 'ben.reyes@sorsu.edu.ph', role: 'PLAYER' },
+        { school_id: SCHOOL_IDS[2], full_name: 'Carla Santos', email: 'carla.santos@sorsu.edu.ph', role: 'PLAYER' },
+        { school_id: SCHOOL_IDS[3], full_name: 'Dino Villanueva', email: 'dino.villanueva@sorsu.edu.ph', role: 'PLAYER' },
+        { school_id: SCHOOL_IDS[4], full_name: 'Eli Gonzales', email: 'eli.gonzales@sorsu.edu.ph', role: 'PLAYER' },
+        { school_id: SCHOOL_IDS[5], full_name: 'Faye Bautista', email: 'faye.bautista@sorsu.edu.ph', role: 'HOST' },
       ]);
       const [ana, ben, carla, dino, eli, faye] = users.map((u) => u.user_id);
 
