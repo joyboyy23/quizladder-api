@@ -1,0 +1,2528 @@
+{
+  "info": {
+    "name": "QuizLadder",
+    "description": "Phase 5 collection: JWT auth, Accounts, Module 1 question sets, Module 2 sessions and players. Run Log in folder first after npm run db:reset with the API on port 3001.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3001/api/v1"
+    },
+    {
+      "key": "hubKey",
+      "value": "dev-hub-key"
+    },
+    {
+      "key": "demoPassword",
+      "value": "quizladder"
+    },
+    {
+      "key": "adminToken",
+      "value": ""
+    },
+    {
+      "key": "hostToken",
+      "value": ""
+    },
+    {
+      "key": "playerToken",
+      "value": ""
+    },
+    {
+      "key": "carlaToken",
+      "value": ""
+    },
+    {
+      "key": "dinoToken",
+      "value": ""
+    },
+    {
+      "key": "eliToken",
+      "value": ""
+    },
+    {
+      "key": "anaToken",
+      "value": ""
+    },
+    {
+      "key": "adminId",
+      "value": ""
+    },
+    {
+      "key": "newUserId",
+      "value": ""
+    },
+    {
+      "key": "newToken",
+      "value": ""
+    },
+    {
+      "key": "badToken",
+      "value": ""
+    },
+    {
+      "key": "wrongMessage",
+      "value": ""
+    },
+    {
+      "key": "setId",
+      "value": ""
+    },
+    {
+      "key": "librarySetId",
+      "value": ""
+    },
+    {
+      "key": "setName",
+      "value": ""
+    },
+    {
+      "key": "extraSetId",
+      "value": ""
+    },
+    {
+      "key": "code",
+      "value": ""
+    },
+    {
+      "key": "playerId",
+      "value": ""
+    },
+    {
+      "key": "fullCode",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Log in (run this folder first)",
+      "item": [
+        {
+          "name": "Log in admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"school_id\": \"ADM-0001\",\n  \"password\": \"{{demoPassword}}\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/login"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test('token is a string', function () { pm.expect(body.token).to.be.a('string'); });",
+                  "pm.collectionVariables.set('adminToken', body.token);",
+                  "pm.collectionVariables.set('adminId', String(body.user.user_id));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Log in host",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"school_id\": \"FAC-0042\",\n  \"password\": \"{{demoPassword}}\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/login"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test('token is a string', function () { pm.expect(body.token).to.be.a('string'); });",
+                  "pm.collectionVariables.set('hostToken', body.token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Log in player Ben",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"school_id\": \"2023-00456\",\n  \"password\": \"{{demoPassword}}\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/login"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test('token is a string', function () { pm.expect(body.token).to.be.a('string'); });",
+                  "pm.collectionVariables.set('playerToken', body.token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Log in player Carla",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"school_id\": \"2023-00789\",\n  \"password\": \"{{demoPassword}}\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/login"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test('token is a string', function () { pm.expect(body.token).to.be.a('string'); });",
+                  "pm.collectionVariables.set('carlaToken', body.token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Log in player Dino",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"school_id\": \"2024-00111\",\n  \"password\": \"{{demoPassword}}\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/login"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test('token is a string', function () { pm.expect(body.token).to.be.a('string'); });",
+                  "pm.collectionVariables.set('dinoToken', body.token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Log in player Eli",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"school_id\": \"2024-00222\",\n  \"password\": \"{{demoPassword}}\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/login"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test('token is a string', function () { pm.expect(body.token).to.be.a('string'); });",
+                  "pm.collectionVariables.set('eliToken', body.token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Log in player Ana",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"school_id\": \"2023-00123\",\n  \"password\": \"{{demoPassword}}\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/login"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test('token is a string', function () { pm.expect(body.token).to.be.a('string'); });",
+                  "pm.collectionVariables.set('anaToken', body.token);"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Accounts",
+      "item": [
+        {
+          "name": "Register new player",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/register",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"school_id\": \"2099-3001\",\n  \"full_name\": \"Nina Cruz\",\n  \"email\": \"nina.cruz@sorsu.edu.ph\",\n  \"password\": \"Libro-2026\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 201', function () { pm.response.to.have.status(201); });",
+                  "const body = pm.response.json();",
+                  "pm.test('role is PLAYER', function () { pm.expect(body.user.role).to.eql('PLAYER'); });",
+                  "pm.test('user has no password_hash', function () { pm.expect(body.user).to.not.have.property('password_hash'); });",
+                  "pm.test('response text has no password', function () { pm.expect(pm.response.text()).to.not.match(/password/i); });",
+                  "pm.collectionVariables.set('newUserId', String(body.user.user_id));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Register duplicate school ID",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/register",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"school_id\": \"2099-3001\",\n  \"full_name\": \"Other Person\",\n  \"email\": \"other@sorsu.edu.ph\",\n  \"password\": \"Libro-2026\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 409', function () { pm.response.to.have.status(409); });",
+                  "pm.test('code is SCHOOL_ID_TAKEN', function () { pm.expect(pm.response.json().error.code).to.eql('SCHOOL_ID_TAKEN'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Register duplicate email",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/register",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"school_id\": \"2099-3003\",\n  \"full_name\": \"Other Person\",\n  \"email\": \"nina.cruz@sorsu.edu.ph\",\n  \"password\": \"Libro-2026\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 409', function () { pm.response.to.have.status(409); });",
+                  "pm.test('code is EMAIL_TAKEN', function () { pm.expect(pm.response.json().error.code).to.eql('EMAIL_TAKEN'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Register asking for ADMIN",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/register",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"school_id\": \"2099-3002\",\n  \"full_name\": \"Would Be Admin\",\n  \"email\": \"would.be.admin@sorsu.edu.ph\",\n  \"password\": \"Libro-2026\",\n  \"role\": \"ADMIN\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 201', function () { pm.response.to.have.status(201); });",
+                  "pm.test('role is PLAYER', function () { pm.expect(pm.response.json().user.role).to.eql('PLAYER'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Register weak password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/register",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"school_id\": \"2099-3010\",\n  \"full_name\": \"Weak Pass\",\n  \"email\": \"weak.pass@sorsu.edu.ph\",\n  \"password\": \"abc\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 400', function () { pm.response.to.have.status(400); });",
+                  "pm.test('code is VALIDATION_FAILED', function () { pm.expect(pm.response.json().error.code).to.eql('VALIDATION_FAILED'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Register password without a number",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/register",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"school_id\": \"2099-3011\",\n  \"full_name\": \"No Number\",\n  \"email\": \"no.number@sorsu.edu.ph\",\n  \"password\": \"LibroLibro\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 400', function () { pm.response.to.have.status(400); });",
+                  "pm.test('code is VALIDATION_FAILED', function () { pm.expect(pm.response.json().error.code).to.eql('VALIDATION_FAILED'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Register bad school ID",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/register",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"school_id\": \"12345\",\n  \"full_name\": \"Bad School\",\n  \"email\": \"bad.school@sorsu.edu.ph\",\n  \"password\": \"Libro-2026\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 400', function () { pm.response.to.have.status(400); });",
+                  "pm.test('code is VALIDATION_FAILED', function () { pm.expect(pm.response.json().error.code).to.eql('VALIDATION_FAILED'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Register bad email",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/register",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"school_id\": \"2099-3012\",\n  \"full_name\": \"Bad Email\",\n  \"email\": \"not-an-email\",\n  \"password\": \"Libro-2026\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 400', function () { pm.response.to.have.status(400); });",
+                  "pm.test('code is VALIDATION_FAILED', function () { pm.expect(pm.response.json().error.code).to.eql('VALIDATION_FAILED'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Log in the new account",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"school_id\": \"2099-3001\",\n  \"password\": \"Libro-2026\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.collectionVariables.set('newToken', body.token);",
+                  "pm.test('body has no password_hash', function () { pm.expect(body).to.not.have.property('password_hash'); pm.expect(body.user).to.not.have.property('password_hash'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Wrong password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"school_id\": \"2099-3001\",\n  \"password\": \"Wrong-Pass-2026\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 401', function () { pm.response.to.have.status(401); });",
+                  "const body = pm.response.json();",
+                  "pm.test('code is INVALID_CREDENTIALS', function () { pm.expect(body.error.code).to.eql('INVALID_CREDENTIALS'); });",
+                  "pm.collectionVariables.set('wrongMessage', body.error.message);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Unknown school ID",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"school_id\": \"2099-9999\",\n  \"password\": \"Wrong-Pass-2026\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 401', function () { pm.response.to.have.status(401); });",
+                  "const body = pm.response.json();",
+                  "pm.test('code is INVALID_CREDENTIALS', function () { pm.expect(body.error.code).to.eql('INVALID_CREDENTIALS'); });",
+                  "pm.test('same message as wrong password', function () { pm.expect(body.error.message).to.eql(pm.collectionVariables.get('wrongMessage')); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login with missing fields",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 400', function () { pm.response.to.have.status(400); });",
+                  "pm.test('code is VALIDATION_FAILED', function () { pm.expect(pm.response.json().error.code).to.eql('VALIDATION_FAILED'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Me with a token",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{newToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/me"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('school_id matches', function () { pm.expect(pm.response.json().user.school_id).to.eql('2099-3001'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Me with no token",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/auth/me"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 401', function () { pm.response.to.have.status(401); });",
+                  "pm.test('code is AUTH_REQUIRED', function () { pm.expect(pm.response.json().error.code).to.eql('AUTH_REQUIRED'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Me with a changed token",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{badToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/me"
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('badToken', pm.collectionVariables.get('newToken').slice(0,-2) + 'xx');"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 401', function () { pm.response.to.have.status(401); });",
+                  "pm.test('code is INVALID_TOKEN', function () { pm.expect(pm.response.json().error.code).to.eql('INVALID_TOKEN'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Me with only X-Demo-User",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Demo-User",
+                "value": "2099-0001"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/me"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 401', function () { pm.response.to.have.status(401); });",
+                  "pm.test('code is AUTH_REQUIRED', function () { pm.expect(pm.response.json().error.code).to.eql('AUTH_REQUIRED'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Player lists accounts",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/users"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 403', function () { pm.response.to.have.status(403); });",
+                  "pm.test('code is FORBIDDEN', function () { pm.expect(pm.response.json().error.code).to.eql('FORBIDDEN'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Host lists accounts",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{hostToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/users"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 403', function () { pm.response.to.have.status(403); });",
+                  "pm.test('code is FORBIDDEN', function () { pm.expect(pm.response.json().error.code).to.eql('FORBIDDEN'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Admin lists accounts",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/users"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test('body is an array', function () { pm.expect(body).to.be.an('array'); });",
+                  "pm.test('no password_hash', function () { body.forEach((u) => pm.expect(u).to.not.have.property('password_hash')); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Admin promotes the new player",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/users/{{newUserId}}/role",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"HOST\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('role is HOST', function () { pm.expect(pm.response.json().role).to.eql('HOST'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Admin changes own role",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/users/{{adminId}}/role",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"HOST\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 409', function () { pm.response.to.have.status(409); });",
+                  "pm.test('code is CANNOT_CHANGE_OWN_ROLE', function () { pm.expect(pm.response.json().error.code).to.eql('CANNOT_CHANGE_OWN_ROLE'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Admin sends invalid role",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/users/{{newUserId}}/role",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"TEACHER\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 400', function () { pm.response.to.have.status(400); });",
+                  "pm.test('code is VALIDATION_FAILED', function () { pm.expect(pm.response.json().error.code).to.eql('VALIDATION_FAILED'); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Module 1 - Question sets",
+      "item": [
+        {
+          "name": "List sets and remember Library Basics",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{hostToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/question-sets"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                  "const sets = pm.response.json();",
+                  "pm.test('body is an array', function () { pm.expect(sets).to.be.an('array'); });",
+                  "const library = sets.find((set) => set.name === 'Library Basics');",
+                  "pm.test('Library Basics is listed', function () { pm.expect(library).to.be.an('object'); });",
+                  "if (library) pm.collectionVariables.set('librarySetId', String(library.id));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create works",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{hostToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Week 11 Set {{$timestamp}}\"\n}"
+            },
+            "url": "{{baseUrl}}/question-sets"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 201', function () { pm.response.to.have.status(201); });",
+                  "const body = pm.response.json();",
+                  "pm.test('returns the new set', function () {",
+                  "  pm.expect(body.id).to.be.a('number');",
+                  "  pm.expect(body.name).to.be.a('string');",
+                  "  pm.expect(body).to.not.have.property('host_id');",
+                  "});",
+                  "pm.collectionVariables.set('setId', String(body.id));",
+                  "pm.collectionVariables.set('setName', body.name);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Extra field host_id ignored",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{hostToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Ignored Host {{$timestamp}}\",\n  \"host_id\": 99\n}"
+            },
+            "url": "{{baseUrl}}/question-sets"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 201', function () { pm.response.to.have.status(201); });",
+                  "const body = pm.response.json();",
+                  "pm.test('host_id is not stored', function () { pm.expect(body).to.not.have.property('host_id'); });",
+                  "pm.collectionVariables.set('extraSetId', String(body.id));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Bad field short name",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{hostToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"ab\"\n}"
+            },
+            "url": "{{baseUrl}}/question-sets"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 400', function () { pm.response.to.have.status(400); });",
+                  "pm.test('VALIDATION_FAILED', function () { pm.expect(pm.response.json().error.code).to.eql('VALIDATION_FAILED'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Broken JSON",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{hostToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"name\": \"Quiz\""
+            },
+            "url": "{{baseUrl}}/question-sets"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 400', function () { pm.response.to.have.status(400); });",
+                  "pm.test('INVALID_JSON', function () { pm.expect(pm.response.json().error.code).to.eql('INVALID_JSON'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Nobody no header",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Nobody Set\"\n}"
+            },
+            "url": "{{baseUrl}}/question-sets"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 401', function () { pm.response.to.have.status(401); });",
+                  "pm.test('AUTH_REQUIRED', function () { pm.expect(pm.response.json().error.code).to.eql('AUTH_REQUIRED'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Wrong role player",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Student Set\"\n}"
+            },
+            "url": "{{baseUrl}}/question-sets"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 403', function () { pm.response.to.have.status(403); });",
+                  "pm.test('FORBIDDEN', function () { pm.expect(pm.response.json().error.code).to.eql('FORBIDDEN'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Duplicate name",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{hostToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Library Basics\"\n}"
+            },
+            "url": "{{baseUrl}}/question-sets"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 409', function () { pm.response.to.have.status(409); });",
+                  "pm.test('NAME_TAKEN', function () { pm.expect(pm.response.json().error.code).to.eql('NAME_TAKEN'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Read one",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{hostToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/question-sets/{{setId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('same set', function () {",
+                  "  pm.expect(pm.response.json().id).to.eql(Number(pm.collectionVariables.get('setId')));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Read missing",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{hostToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/question-sets/999999"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 404', function () { pm.response.to.have.status(404); });",
+                  "pm.test('QUESTION_SET_NOT_FOUND', function () { pm.expect(pm.response.json().error.code).to.eql('QUESTION_SET_NOT_FOUND'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Bad id",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{hostToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/question-sets/abc"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 400', function () { pm.response.to.have.status(400); });",
+                  "pm.test('VALIDATION_FAILED', function () { pm.expect(pm.response.json().error.code).to.eql('VALIDATION_FAILED'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{hostToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"{{setName}} renamed\"\n}"
+            },
+            "url": "{{baseUrl}}/question-sets/{{setId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('name changed', function () {",
+                  "  pm.expect(pm.response.json().name).to.eql(pm.collectionVariables.get('setName') + ' renamed');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete used set Library Basics",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{hostToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/question-sets/{{librarySetId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 409', function () { pm.response.to.have.status(409); });",
+                  "pm.test('QUESTION_SET_IN_USE', function () { pm.expect(pm.response.json().error.code).to.eql('QUESTION_SET_IN_USE'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete own unused set",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{hostToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/question-sets/{{setId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 204', function () { pm.response.to.have.status(204); });",
+                  "pm.test('empty body', function () { pm.expect(pm.response.text()).to.eql(''); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete again",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{hostToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/question-sets/{{setId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 404', function () { pm.response.to.have.status(404); });",
+                  "pm.test('QUESTION_SET_NOT_FOUND', function () { pm.expect(pm.response.json().error.code).to.eql('QUESTION_SET_NOT_FOUND'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete the extra set",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{hostToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/question-sets/{{extraSetId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 204', function () { pm.response.to.have.status(204); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List as host",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{hostToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/question-sets"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('body is an array', function () { pm.expect(pm.response.json()).to.be.an('array'); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Module 2 - Sessions and players",
+      "item": [
+        {
+          "name": "Remember Library Basics set id",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{hostToken}}"
+              }
+            ],
+            "body": {
+              "mode": "none"
+            },
+            "url": "{{baseUrl}}/question-sets"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                  "const sets = pm.response.json();",
+                  "const library = sets.find((set) => set.name === 'Library Basics');",
+                  "pm.test('Library Basics is listed', function () { pm.expect(library).to.be.an('object'); });",
+                  "if (library) pm.collectionVariables.set('librarySetId', String(library.id));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create game",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{hostToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"question_set_id\": {{librarySetId}}\n}"
+            },
+            "url": "{{baseUrl}}/sessions"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 201', function () { pm.response.to.have.status(201); });",
+                  "const body = pm.response.json();",
+                  "pm.test('six-digit code and WAITING', function () {",
+                  "  pm.expect(body.code).to.match(/^[1-9][0-9]{5}$/);",
+                  "  pm.expect(body.status).to.eql('WAITING');",
+                  "  pm.expect(body).to.not.have.property('session_id');",
+                  "});",
+                  "pm.collectionVariables.set('code', body.code);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Client cannot pick the code",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{hostToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"question_set_id\": {{librarySetId}},\n  \"join_code\": \"111111\"\n}"
+            },
+            "url": "{{baseUrl}}/sessions"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 201', function () { pm.response.to.have.status(201); });",
+                  "const body = pm.response.json();",
+                  "pm.test('server chose the code', function () {",
+                  "  pm.expect(body.code).to.match(/^[1-9][0-9]{5}$/);",
+                  "  pm.expect(body.code).to.not.eql('111111');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create, bad set",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{hostToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"question_set_id\": 9999\n}"
+            },
+            "url": "{{baseUrl}}/sessions"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 404', function () { pm.response.to.have.status(404); });",
+                  "pm.test('QUESTION_SET_NOT_FOUND', function () {",
+                  "  pm.expect(pm.response.json().error.code).to.eql('QUESTION_SET_NOT_FOUND');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create, player forbidden",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"question_set_id\": {{librarySetId}}\n}"
+            },
+            "url": "{{baseUrl}}/sessions"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 403', function () { pm.response.to.have.status(403); });",
+                  "pm.test('FORBIDDEN', function () {",
+                  "  pm.expect(pm.response.json().error.code).to.eql('FORBIDDEN');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get game",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}"
+              }
+            ],
+            "body": {
+              "mode": "none"
+            },
+            "url": "{{baseUrl}}/sessions/{{code}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test('returns the lobby', function () {",
+                  "  pm.expect(body.code).to.eql(pm.collectionVariables.get('code'));",
+                  "  pm.expect(body.status).to.eql('WAITING');",
+                  "  pm.expect(body).to.not.have.property('session_id');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get, malformed code",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "none"
+            },
+            "url": "{{baseUrl}}/sessions/12345"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 400', function () { pm.response.to.have.status(400); });",
+                  "pm.test('VALIDATION_FAILED', function () {",
+                  "  pm.expect(pm.response.json().error.code).to.eql('VALIDATION_FAILED');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get, unknown code",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "none"
+            },
+            "url": "{{baseUrl}}/sessions/999999"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 404', function () { pm.response.to.have.status(404); });",
+                  "pm.test('SESSION_NOT_FOUND', function () {",
+                  "  pm.expect(pm.response.json().error.code).to.eql('SESSION_NOT_FOUND');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Join new",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nickname\": \"BookwormBen\",\n  \"avatar_color\": \"BLUE\"\n}"
+            },
+            "url": "{{baseUrl}}/sessions/{{code}}/players"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 201', function () { pm.response.to.have.status(201); });",
+                  "const body = pm.response.json();",
+                  "pm.test('new seat', function () {",
+                  "  pm.expect(body.rejoined).to.eql(false);",
+                  "  pm.expect(body.nickname).to.eql('BookwormBen');",
+                  "  pm.expect(body.avatar_color).to.eql('BLUE');",
+                  "  pm.expect(body.position).to.eql(1);",
+                  "  pm.expect(body.session.status).to.eql('WAITING');",
+                  "});",
+                  "pm.collectionVariables.set('playerId', String(body.player_id));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Join again rejoin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nickname\": \"BookwormBen\",\n  \"avatar_color\": \"BLUE\"\n}"
+            },
+            "url": "{{baseUrl}}/sessions/{{code}}/players"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test('same seat rejoined', function () {",
+                  "  pm.expect(body.rejoined).to.eql(true);",
+                  "  pm.expect(String(body.player_id)).to.eql(pm.collectionVariables.get('playerId'));",
+                  "  pm.expect(body.position).to.eql(1);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Join, bad nickname",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{carlaToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nickname\": \"a\",\n  \"avatar_color\": \"GREEN\"\n}"
+            },
+            "url": "{{baseUrl}}/sessions/{{code}}/players"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 400', function () { pm.response.to.have.status(400); });",
+                  "pm.test('VALIDATION_FAILED', function () {",
+                  "  pm.expect(pm.response.json().error.code).to.eql('VALIDATION_FAILED');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Join, no token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nickname\": \"Ghost\",\n  \"avatar_color\": \"RED\"\n}"
+            },
+            "url": "{{baseUrl}}/sessions/{{code}}/players"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 401', function () { pm.response.to.have.status(401); });",
+                  "pm.test('AUTH_REQUIRED', function () {",
+                  "  pm.expect(pm.response.json().error.code).to.eql('AUTH_REQUIRED');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Join, nickname taken",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{carlaToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nickname\": \"BookwormBen\",\n  \"avatar_color\": \"GREEN\"\n}"
+            },
+            "url": "{{baseUrl}}/sessions/{{code}}/players"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 409', function () { pm.response.to.have.status(409); });",
+                  "pm.test('NICKNAME_TAKEN', function () {",
+                  "  pm.expect(pm.response.json().error.code).to.eql('NICKNAME_TAKEN');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Join second player for list",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{carlaToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nickname\": \"CarlaQuiz\",\n  \"avatar_color\": \"GREEN\"\n}"
+            },
+            "url": "{{baseUrl}}/sessions/{{code}}/players"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 201', function () { pm.response.to.have.status(201); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List players",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "none"
+            },
+            "url": "{{baseUrl}}/sessions/{{code}}/players"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test('players array', function () {",
+                  "  pm.expect(body.players).to.be.an('array');",
+                  "  pm.expect(body.players.length).to.be.at.least(2);",
+                  "  pm.expect(body.session).to.not.have.property('session_id');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "One game at a time",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{anaToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nickname\": \"AnaReads\",\n  \"avatar_color\": \"RED\"\n}"
+            },
+            "url": "{{baseUrl}}/sessions/{{code}}/players"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 409', function () { pm.response.to.have.status(409); });",
+                  "pm.test('ALREADY_IN_GAME', function () {",
+                  "  pm.expect(pm.response.json().error.code).to.eql('ALREADY_IN_GAME');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Ana rejoins her own PLAYING game",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{anaToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nickname\": \"AnaReads\",\n  \"avatar_color\": \"RED\"\n}"
+            },
+            "url": "{{baseUrl}}/sessions/735104/players"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test('same seat and score', function () {",
+                  "  pm.expect(body.rejoined).to.eql(true);",
+                  "  pm.expect(body.nickname).to.eql('AnaReads');",
+                  "  pm.expect(body.position).to.eql(34);",
+                  "  pm.expect(body.session.code).to.eql('735104');",
+                  "  pm.expect(body.session.status).to.eql('PLAYING');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Join, started PLAYING",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dinoToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nickname\": \"DinoDice\",\n  \"avatar_color\": \"YELLOW\"\n}"
+            },
+            "url": "{{baseUrl}}/sessions/735104/players"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 409', function () { pm.response.to.have.status(409); });",
+                  "pm.test('SESSION_NOT_JOINABLE', function () {",
+                  "  pm.expect(pm.response.json().error.code).to.eql('SESSION_NOT_JOINABLE');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Join, closed FINISHED (no seat)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nickname\": \"LateAdmin\",\n  \"avatar_color\": \"RED\"\n}"
+            },
+            "url": "{{baseUrl}}/sessions/482913/players"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 409', function () { pm.response.to.have.status(409); });",
+                  "pm.test('SESSION_ENDED', function () {",
+                  "  pm.expect(pm.response.json().error.code).to.eql('SESSION_ENDED');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Rejoin a closed game keeps the seat",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dinoToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nickname\": \"DinoDice\",\n  \"avatar_color\": \"YELLOW\"\n}"
+            },
+            "url": "{{baseUrl}}/sessions/482913/players"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test('rejoined keeps the seat', function () {",
+                  "  pm.expect(body.rejoined).to.eql(true);",
+                  "  pm.expect(body.position).to.eql(87);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Finish PLAYING 735104 to free seats",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{hostToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"FINISHED\"\n}"
+            },
+            "url": "{{baseUrl}}/sessions/735104"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('735104 finished', function () {",
+                  "  pm.expect(pm.response.json().status).to.eql('FINISHED');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create lobby for full test",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{hostToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"question_set_id\": {{librarySetId}}\n}"
+            },
+            "url": "{{baseUrl}}/sessions"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 201', function () { pm.response.to.have.status(201); });",
+                  "pm.collectionVariables.set('fullCode', pm.response.json().code);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Fill seat 1 Ben",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nickname\": \"Ben1\",\n  \"avatar_color\": \"BLUE\"\n}"
+            },
+            "url": "{{baseUrl}}/sessions/{{fullCode}}/players"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 201', function () { pm.response.to.have.status(201); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Fill seat 2 Carla",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{carlaToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nickname\": \"Carla2\",\n  \"avatar_color\": \"GREEN\"\n}"
+            },
+            "url": "{{baseUrl}}/sessions/{{fullCode}}/players"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 201', function () { pm.response.to.have.status(201); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Fill seat 3 Dino",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{dinoToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nickname\": \"Dino3\",\n  \"avatar_color\": \"YELLOW\"\n}"
+            },
+            "url": "{{baseUrl}}/sessions/{{fullCode}}/players"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 201', function () { pm.response.to.have.status(201); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Fill seat 4 Eli",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{eliToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nickname\": \"Eli4\",\n  \"avatar_color\": \"RED\"\n}"
+            },
+            "url": "{{baseUrl}}/sessions/{{fullCode}}/players"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 201', function () { pm.response.to.have.status(201); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Join, full",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{anaToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nickname\": \"TooMany\",\n  \"avatar_color\": \"BLUE\"\n}"
+            },
+            "url": "{{baseUrl}}/sessions/{{fullCode}}/players"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 409', function () { pm.response.to.have.status(409); });",
+                  "pm.test('SESSION_FULL', function () {",
+                  "  pm.expect(pm.response.json().error.code).to.eql('SESSION_FULL');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Start game PLAYING",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{hostToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"PLAYING\"\n}"
+            },
+            "url": "{{baseUrl}}/sessions/{{code}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test('started', function () {",
+                  "  pm.expect(body.status).to.eql('PLAYING');",
+                  "  pm.expect(body.started_at).to.not.eql(null);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Bad status WAITING",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{hostToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"WAITING\"\n}"
+            },
+            "url": "{{baseUrl}}/sessions/{{code}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 400', function () { pm.response.to.have.status(400); });",
+                  "pm.test('VALIDATION_FAILED', function () {",
+                  "  pm.expect(pm.response.json().error.code).to.eql('VALIDATION_FAILED');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Close game FINISHED",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{hostToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"FINISHED\"\n}"
+            },
+            "url": "{{baseUrl}}/sessions/{{code}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test('finished_at set', function () {",
+                  "  pm.expect(body.status).to.eql('FINISHED');",
+                  "  pm.expect(body.finished_at).to.not.eql(null);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Results includes finished games",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Hub-Key",
+                "value": "{{hubKey}}"
+              }
+            ],
+            "body": {
+              "mode": "none"
+            },
+            "url": "{{baseUrl}}/results"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test('results is an array', function () { pm.expect(body.results).to.be.an('array'); });",
+                  "pm.test('at least one finished game', function () { pm.expect(body.results.length).to.be.at.least(1); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

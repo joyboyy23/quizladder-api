@@ -7,7 +7,7 @@ const rules = require('../validators/question-set.validator');
 const router = Router();
 
 // Faculty and staff share every question set. Students cannot manage them.
-router.use(requireUser('FACULTY', 'STAFF'));
+router.use(requireUser('HOST', 'ADMIN'));
 
 router.get('/', controller.list);
 router.post('/', rules.createRules, validate, controller.create);
