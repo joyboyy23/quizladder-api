@@ -17,6 +17,11 @@ module.exports = {
     code: 'NAME_TAKEN',
     message: 'A question set with that name already exists.',
   },
+  questions_question_set_id_position_unique: {
+    status: 409,
+    code: 'POSITION_CONFLICT',
+    message: 'Another request added a question at the same moment. Try again.',
+  },
   game_sessions_question_set_id_fkey: {
     status: 409,
     code: 'QUESTION_SET_IN_USE',
