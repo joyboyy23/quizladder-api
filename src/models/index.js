@@ -91,6 +91,17 @@ GameSession.belongsTo(QuestionSet, {
   as: 'questionSet',
 });
 
+// USER <-> QUESTION SET (owner)
+User.hasMany(QuestionSet, {
+  foreignKey: 'owner_id',
+  as: 'questionSets',
+});
+
+QuestionSet.belongsTo(User, {
+  foreignKey: 'owner_id',
+  as: 'owner',
+});
+
 // BOARD <-> GAME SESSION
 Board.hasOne(GameSession, {
   foreignKey: 'board_id',

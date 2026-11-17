@@ -18,6 +18,15 @@ module.exports = (sequelize, DataTypes) => {
           type: DataTypes.TEXT,
           allowNull: false,
         },
+
+        position: {
+          type: DataTypes.INTEGER,
+          allowNull: true,
+          validate: {
+            min: 1,
+            max: 1000,
+          },
+        },
       },
       {
         tableName: 'questions',
