@@ -14,7 +14,17 @@ module.exports = (sequelize, DataTypes) => {
           allowNull: false,
           unique: true,
         },
-  
+
+        owner_id: {
+          type: DataTypes.BIGINT,
+          allowNull: true,
+        },
+
+        cover_picture: {
+          type: DataTypes.STRING(255),
+          allowNull: true,
+        },
+
         created_at: {
           type: DataTypes.DATE,
           allowNull: false,

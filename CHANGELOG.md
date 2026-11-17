@@ -8,8 +8,10 @@ All notable changes, newest first.
 ## [x.y.z] (Week 14): [Your summary]
 - [Your change]
 
-## [x.y.z] (Week 13): [Your summary]
-- [Your change]
+## 1.1.0 (Week 13): question bank
+- Added question-set ownership, cover uploads, paged/searchable/sortable set lists, and nested question/choice CRUD
+- Added server-assigned question positions, four-choice validation, a 100-question limit, and freeze rules for sets used in games
+- Added demo set owners and question positions, plus Postman coverage and API documentation for the question bank
 
 ## 1.1.0 (Week 12): accounts, passwords and tokens
 - Added POST /auth/register, POST /auth/login and GET /auth/me; passwords are stored as bcrypt hashes and login returns a signed JWT

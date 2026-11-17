@@ -1,4 +1,5 @@
-const { body, param } = require('express-validator');
+const { body, param, query } = require('express-validator');
+const { pageRules, sortRules } = require('./list.validator');
 
 const idParam = [
   param('id')
@@ -25,4 +26,20 @@ function name(required) {
 const createRules = [name(true)];
 const updateRules = [...idParam, name(false)];
 
-module.exports = { idParam, createRules, updateRules };
+const listRules = [
+  ...pageRules,
+  ...sortRules(['id', 'name', 'created_at']),
+  query('q')
+    .optional()
+    .isString().withMessage('q must be text')
+    .bail()
+    .trim()
+    .isLength({ min: 1, max: 100 }).withMessage('q must be 1 to 100 characters long'),
+];
+
+const readRules = [
+  ...idParam,
+  query('include').optional().isIn(['questions']).withMessage('include must be: questions'),
+];
+
+module.exports = { idParam, createRules, updateRules, listRules, readRules };
