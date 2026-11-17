@@ -60,43 +60,53 @@ Base URL: `http://localhost:3001/api/v1`
 
 To test `/results` locally (for example in Postman), add the request header `X-Hub-Key: dev-hub-key`. A plain browser visit cannot send it, so it always gets 401.
 
-## Auth for Modules 1 and 2
+## Authentication
 
-Until Week 12 login exists, send who you are with `X-Demo-User: <school_id>`. Missing or unknown IDs get `401 AUTH_REQUIRED`.
+Register and log in through `/auth/register` and `/auth/login`. Send the returned token as `Authorization: Bearer <token>` on protected requests. Question-set routes require a HOST or ADMIN account.
 
 ## Module 1 endpoints (question sets)
 
-Only `FACULTY` and `STAFF` may manage question sets.
+HOST and ADMIN accounts can read question sets. The creator or an ADMIN can change a set.
 
 | Method | Path | Purpose | Success |
 |---|---|---|---|
-| GET | /question-sets | List all sets | 200 |
+| GET | /question-sets | List sets (`page`, `limit`, `q`, `sort`, `order`) | 200 `{ data, meta }` |
 | POST | /question-sets | Create a set (`name` 3–100 chars) | 201 |
-| GET | /question-sets/:id | Read one set | 200 |
-| PATCH | /question-sets/:id | Rename a set | 200 |
-| DELETE | /question-sets/:id | Delete an unused set | 204 |
+| GET | /question-sets/:id | Read one set; `?include=questions` includes questions and choices | 200 |
+| PATCH | /question-sets/:id | Rename a set (owner or ADMIN) | 200 |
+| DELETE | /question-sets/:id | Delete an unused set and its questions (owner or ADMIN) | 204 |
 
 Rules worth knowing:
 
-- Students get `403 FORBIDDEN`.
+- Players get `403 FORBIDDEN`.
 - Set names are unique: a duplicate returns `409 NAME_TAKEN`.
-- A set that was used in a game cannot be deleted: `409 QUESTION_SET_IN_USE`.
+- Only the owner or an ADMIN can change a set; sets without an owner are ADMIN-only.
+- A set used by a game cannot be deleted or have its questions changed: `409 QUESTION_SET_IN_USE`. Renaming and changing its cover remain allowed.
 - Responses use a public `id` field (not the internal `question_set_id`).
 
-Demo school IDs for Postman (`postman/QuizLadder-Module1-QuestionSets.postman_collection.json`):
+## Question bank endpoints (Milestone M2)
 
-| Header | Account | Useful for |
-|---|---|---|
-| `FAC-0042` | Faye Bautista (FACULTY) | Full CRUD on question sets |
-| `2023-00456` | Ben Reyes (STUDENT) | Wrong-role / forbidden tests |
+| Method | Path | Purpose | Success |
+|---|---|---|---|
+| GET | /question-sets?page&limit&q&sort&order | Search, sort and page through sets | 200 `{ data, meta }` |
+| GET | /question-sets/:id?include=questions | Read a set with its questions and choices | 200 |
+| GET / POST | /question-sets/:id/questions | List or add questions and choices | 200 / 201 |
+| PATCH / DELETE | /question-sets/:id/questions/:questionId | Edit or remove a question | 200 / 204 |
+| PUT | /question-sets/:id/cover | Upload or replace a set cover | 200 |
+
+Questions have exactly four choices and exactly one correct answer. The server assigns each question's position. A set holds at most 100 questions. PNG and JPEG covers are limited to 1 MB and are renamed by the server.
+
+Question sets, questions and covers may be changed only by the owner or an ADMIN. A set used in a game is frozen for question edits and deletion. Errors include `QUESTION_NOT_FOUND`, `QUESTION_SET_IN_USE`, `QUESTION_LIMIT_REACHED`, `INVALID_FILE_TYPE`, `FILE_TOO_LARGE` and `COVER_REQUIRED`.
+
+Postman uploads use files under `postman/fixtures/`; set the working directory to the repository root so the collection can find them.
 
 ## Module 2 endpoints (sessions and players)
 
 | Method | Path | Purpose | Success |
 |---|---|---|---|
-| POST | /sessions | Faculty/staff starts a lobby (`WAITING`), server makes a six-digit `code` | 201 |
+| POST | /sessions | A HOST or ADMIN starts a lobby (`WAITING`), server makes a six-digit `code` | 201 |
 | GET | /sessions/:code | Read a game by join code | 200 |
-| PATCH | /sessions/:code | Set `status` to `PLAYING` or `FINISHED` (faculty/staff) | 200 |
+| PATCH | /sessions/:code | Set `status` to `PLAYING` or `FINISHED` (HOST or ADMIN) | 200 |
 | POST | /sessions/:code/players | Join a lobby, or rejoin an existing seat | 201 new / 200 rejoin |
 | GET | /sessions/:code/players | List seats ordered by board position | 200 |
 
@@ -113,11 +123,11 @@ Rules worth knowing:
 - Soft capacity is 4 players (`game-info.max_players`). Nickname and avatar color must be unique inside a session.
 - Closing a game sets `FINISHED` and `finished_at`, so it appears in `/results`.
 
-Demo school IDs for Postman (`postman/QuizLadder-Module2-Sessions.postman_collection.json`), after a fresh `db:seed`:
+Demo school IDs for Postman (`postman/QuizLadder.postman_collection.json`), after a fresh `npm run db:reset`:
 
 | Header | Account | Useful for |
 |---|---|---|
-| `FAC-0042` | Faye Bautista (FACULTY) | Create / start / finish sessions (also seated in PLAYING `735104`) |
+| `FAC-0042` | Faye Bautista (HOST) | Create / start / finish sessions (also seated in PLAYING `735104`) |
 | `2023-00456` | Ben Reyes | Clean join of a new lobby |
 | `2023-00789` / `2024-00111` | Carla / Dino | Extra free joiners (only in FINISHED `482913`) |
 | `2023-00123` | Ana Dela Cruz | In PLAYING `735104` — one-game + rejoin tests |
@@ -144,9 +154,9 @@ Every player who finishes scores 100, because they landed exactly on tile 100. T
 
 ## Demo data
 
-`npm run db:seed` loads `db/seeders/20261014130000-demo-data.js`:
+`npm run db:reset` runs the migrations and all seeders:
 
-- 6 users, 1 host (`librarian`), and the "Library Basics" question set (5 questions with 4 answers each)
+- 7 users (including the demo admin), 1 host (`librarian`), and the "Library Basics", "Research Skills" and "Citation Rules" question sets. All three are owned by FAC-0042 (Faye); seeded questions have positions and four choices each.
 - Game `482913` (FINISHED): AnaReads, BookwormBen and CarlaQuiz reached tile 100 exactly; DinoDice stopped on tile 87
 - Game `735104` (PLAYING): three players still on the board, including AnaReads again (one seat per account per game)
 

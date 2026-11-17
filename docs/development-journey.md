@@ -17,6 +17,16 @@ One entry per milestone, written the week you did it. Newest at the bottom.
 - AI tools: I used Claude to plan draft the code, and use the free tier copilot in vscode to generate the Postman collection and debug any errors to the code.
 
 ## M2 · The question bank
+- Dates worked: Nov 17, 2026 · Time spent: [student writes the hours]
+- Goal: Give hosts a question bank: paged lists, nested questions and choices, and a cover upload.
+- What I built: migrations `db/migrations/20261117020000-add-owner-and-cover-to-question-sets.js` and `db/migrations/20261117020100-add-position-to-questions.js`; seeders `db/seeders/20261117020200-demo-question-set-owners.js` and `db/seeders/20261117020300-demo-question-positions.js`; ownership, cover and position model fields; `src/lib/cover-files.js`, `src/middlewares/owned-question-set.js`, and the `question.validator`, `question.repository`, `question.service`, and `question.controller` layers; updated question-set layers, session repository, routes and constraint map. Endpoints include paged/searchable `GET /question-sets`, `GET /question-sets/:id?include=questions`, nested question list/create/edit/delete, and `PUT /question-sets/:id/cover`. Updated the Postman collection, README and changelog.
+- Evidence: [pull request link: add after opening the PR] · <three real commit hashes from `git log --oneline`>
+- Problem I hit: `npm run check` first failed the cover fetch because the pre-request script used the collection's local port 3001 while CI runs the API on port 3099.
+- How I solved it: I changed the script to resolve the effective `baseUrl`, then reran the check; all 120 Postman requests and 241 assertions passed.
+- Decision I made and why: Question sets have an owner (`owner_id`); only the owner or an ADMIN may change them, and a set used by a game is frozen. Cost: a seeded set needed an owner, so a new seeder assigns Faye.
+- Changes to my design set: ERD and data dictionary: `question_sets.owner_id` and `cover_picture`, `questions.position` (UNIQUE with `question_set_id`). Endpoint table: nested question routes, `include=questions`, cover upload.
+- What I would explain to a classmate: [student writes this in their own words]
+- AI tools: GitHub Copilot (agent mode) implemented this milestone from the user-provided plan PDF.
 
 ## M3 · Gameplay
 
