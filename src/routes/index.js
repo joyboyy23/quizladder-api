@@ -8,6 +8,7 @@ const router = Router();
 router.use('/health', require('./health.routes'));
 router.use('/game-info', require('./game-info.routes'));
 router.use('/results', require('./results.routes'));
+router.use('/', require('./docs.routes'));
 
 // From here on, req.user says who is calling (or null).
 router.use(currentUser);

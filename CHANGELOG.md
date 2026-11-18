@@ -8,7 +8,11 @@ All notable changes, newest first.
 ## [x.y.z] (Week 14): [Your summary]
 - [Your change]
 
-## 1.1.0 (Week 13): question bank
+## 1.3.0 (Week 13): gameplay
+- Added transactional turn phases, server-side dice rolls, lazy timeout handling, question and punishment events, and automatic session completion
+- Added public game state and leaderboard endpoints, test-only roll overrides, and a deterministic Postman whole-game folder
+
+## 1.2.0 (Week 13): question bank
 - Added question-set ownership, cover uploads, paged/searchable/sortable set lists, and nested question/choice CRUD
 - Added server-assigned question positions, four-choice validation, a 100-question limit, and freeze rules for sets used in games
 - Added demo set owners and question positions, plus Postman coverage and API documentation for the question bank

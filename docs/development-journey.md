@@ -29,6 +29,16 @@ One entry per milestone, written the week you did it. Newest at the bottom.
 - AI tools: GitHub Copilot (agent mode) implemented this milestone from the user-provided plan PDF.
 
 ## M3 · Gameplay
+- Dates worked: Nov 17, 2026 · Time spent: [student writes the hours]
+- Goal: Implement multiplayer turns, board movement, event choices, timeouts, and finish order using persisted game state.
+- What I built: Reversible gameplay-state migration and seeded game setup; pure board/game rules; locked transactional gameplay services and repositories; validated state, roll, question, answer, punishment and leaderboard endpoints; deterministic Postman gameplay scenarios. Updated the README and API documentation for the rules and errors.
+- Evidence: [pull request link: add after opening the PR] · <commit hashes from `git log --oneline`>
+- Problem I hit: [student writes the problem]
+- How I solved it: [student writes the solution]
+- Decision I made and why: Gameplay state stays in the database; timeouts are applied lazily under the game-session lock so overlapping rolls cannot advance the same turn twice. Test dice/event overrides are ignored in production.
+- Changes to my design set: Added current player, phase, phase start, pending question and turn-number state; added turn-number uniqueness; the session finishes only after all players finish. Added gameplay endpoints and error codes.
+- What I would explain to a classmate: [student writes this in their own words]
+- AI tools: GitHub Copilot (agent mode) implemented this milestone from the user-provided gameplay requirements.
 
 ## M4 · Automated tests and server preparation
 

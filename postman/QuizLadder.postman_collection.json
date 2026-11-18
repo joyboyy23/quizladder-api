@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "QuizLadder",
-    "description": "Phase 5 collection: JWT auth, Accounts, Module 1 question sets, Module 2 sessions and players. Run Log in folder first after npm run db:reset with the API on port 3001.",
+    "description": "JWT auth, Accounts, question sets, question bank, sessions and players, and deterministic M3 gameplay. Run Log in first after npm run db:reset.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -122,6 +122,38 @@
       "key": "oldCoverUrl",
       "value": "",
       "type": "string"
+    },
+    {
+      "key": "gameplayStartedAt",
+      "value": ""
+    },
+    {
+      "key": "gameACode",
+      "value": ""
+    },
+    {
+      "key": "gameAPlayer1",
+      "value": ""
+    },
+    {
+      "key": "gameAPlayer2",
+      "value": ""
+    },
+    {
+      "key": "gameBCode",
+      "value": ""
+    },
+    {
+      "key": "gameBPlayer1",
+      "value": ""
+    },
+    {
+      "key": "gameBPlayer2",
+      "value": ""
+    },
+    {
+      "key": "gameBCorrectChoice",
+      "value": ""
     }
   ],
   "item": [
@@ -3929,6 +3961,1573 @@
                   "const body = pm.response.json();",
                   "pm.test('results is an array', function () { pm.expect(body.results).to.be.an('array'); });",
                   "pm.test('at least one finished game', function () { pm.expect(body.results.length).to.be.at.least(1); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Play a whole game",
+      "item": [
+        {
+          "name": "Remember gameplay start time",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/game-info"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.collectionVariables.set('gameplayStartedAt', new Date(Date.now() - 1000).toISOString());"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Game A - Create",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{hostToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"question_set_id\": \"{{librarySetId}}\"\n}"
+            },
+            "url": "{{baseUrl}}/sessions"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 201', function () { pm.response.to.have.status(201); });",
+                  "const body = pm.response.json();",
+                  "pm.test('waiting game has a public code and no session id', function () {",
+                  "  pm.expect(body.code).to.match(/^[1-9][0-9]{5}$/);",
+                  "  pm.expect(body.status).to.eql('WAITING');",
+                  "  pm.expect(body).to.not.have.property('session_id');",
+                  "});",
+                  "pm.collectionVariables.set('gameACode', body.code);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Game A - Ben joins",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nickname\": \"BenGameplayA\",\n  \"avatar_color\": \"BLUE\"\n}"
+            },
+            "url": "{{baseUrl}}/sessions/{{gameACode}}/players"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 201', function () { pm.response.to.have.status(201); });",
+                  "const body = pm.response.json();",
+                  "pm.test('Ben starts on tile 1', function () {",
+                  "  pm.expect(body.position).to.eql(1);",
+                  "  pm.expect(body.nickname).to.eql('BenGameplayA');",
+                  "});",
+                  "pm.collectionVariables.set('gameAPlayer1', String(body.player_id));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Game A - Roll before start",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dice\": 3\n}"
+            },
+            "url": "{{baseUrl}}/sessions/{{gameACode}}/roll"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 409', function () { pm.response.to.have.status(409); });",
+                  "pm.test('GAME_NOT_PLAYING', function () { pm.expect(pm.response.json().error.code).to.eql('GAME_NOT_PLAYING'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Game A - Start with one player",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{hostToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"PLAYING\"\n}"
+            },
+            "url": "{{baseUrl}}/sessions/{{gameACode}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 409', function () { pm.response.to.have.status(409); });",
+                  "pm.test('NOT_ENOUGH_PLAYERS', function () { pm.expect(pm.response.json().error.code).to.eql('NOT_ENOUGH_PLAYERS'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Game A - Carla joins",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{carlaToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nickname\": \"CarlaGameplayA\",\n  \"avatar_color\": \"GREEN\"\n}"
+            },
+            "url": "{{baseUrl}}/sessions/{{gameACode}}/players"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 201', function () { pm.response.to.have.status(201); });",
+                  "const body = pm.response.json();",
+                  "pm.test('Carla starts on tile 1', function () {",
+                  "  pm.expect(body.position).to.eql(1);",
+                  "  pm.expect(body.nickname).to.eql('CarlaGameplayA');",
+                  "});",
+                  "pm.collectionVariables.set('gameAPlayer2', String(body.player_id));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Game A - Start with two players",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{hostToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"PLAYING\"\n}"
+            },
+            "url": "{{baseUrl}}/sessions/{{gameACode}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('game is PLAYING', function () { pm.expect(pm.response.json().status).to.eql('PLAYING'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Game A - State starts with Ben",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/sessions/{{gameACode}}/state"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test('state is public and the lowest player id starts', function () {",
+                  "  pm.expect(body.status).to.eql('PLAYING');",
+                  "  pm.expect(String(body.current_player.player_id)).to.eql(pm.collectionVariables.get('gameAPlayer1'));",
+                  "  pm.expect(body.turn_phase).to.eql('ROLL');",
+                  "  pm.expect(body).to.not.have.property('session_id');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Game A - Non-current player roll",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{carlaToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dice\": 3\n}"
+            },
+            "url": "{{baseUrl}}/sessions/{{gameACode}}/roll"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 409', function () { pm.response.to.have.status(409); });",
+                  "pm.test('NOT_YOUR_TURN', function () { pm.expect(pm.response.json().error.code).to.eql('NOT_YOUR_TURN'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Game A - Unseated admin roll",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dice\": 3\n}"
+            },
+            "url": "{{baseUrl}}/sessions/{{gameACode}}/roll"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 403', function () { pm.response.to.have.status(403); });",
+                  "pm.test('NOT_SEATED', function () { pm.expect(pm.response.json().error.code).to.eql('NOT_SEATED'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Game A - Invalid test die",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dice\": 9\n}"
+            },
+            "url": "{{baseUrl}}/sessions/{{gameACode}}/roll"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 400', function () { pm.response.to.have.status(400); });",
+                  "pm.test('VALIDATION_FAILED', function () { pm.expect(pm.response.json().error.code).to.eql('VALIDATION_FAILED'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Game A - Ben path 1 (3)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dice\": 3\n}"
+            },
+            "url": "{{baseUrl}}/sessions/{{gameACode}}/roll"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test('matches the verified no-event board path', function () {",
+                  "  pm.expect(body.dice).to.eql(3);",
+                  "  pm.expect(body.from).to.eql(1);",
+                  "  pm.expect(body.to).to.eql(25);",
+                  "  pm.expect(body.tile_type).to.eql('LADDER');",
+                  "  pm.expect(body.snake_or_ladder_to).to.eql(25);",
+                  "  pm.expect(body.finished).to.eql(false);",
+                  "  pm.expect(body.next_phase).to.eql('ROLL');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Game A - Carla path 1 (3)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{carlaToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dice\": 3\n}"
+            },
+            "url": "{{baseUrl}}/sessions/{{gameACode}}/roll"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test('matches the verified no-event board path', function () {",
+                  "  pm.expect(body.dice).to.eql(3);",
+                  "  pm.expect(body.from).to.eql(1);",
+                  "  pm.expect(body.to).to.eql(25);",
+                  "  pm.expect(body.tile_type).to.eql('LADDER');",
+                  "  pm.expect(body.snake_or_ladder_to).to.eql(25);",
+                  "  pm.expect(body.finished).to.eql(false);",
+                  "  pm.expect(body.next_phase).to.eql('ROLL');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Game A - Ben path 2 (6)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dice\": 6\n}"
+            },
+            "url": "{{baseUrl}}/sessions/{{gameACode}}/roll"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test('matches the verified no-event board path', function () {",
+                  "  pm.expect(body.dice).to.eql(6);",
+                  "  pm.expect(body.from).to.eql(25);",
+                  "  pm.expect(body.to).to.eql(31);",
+                  "  pm.expect(body.tile_type).to.eql('NORMAL');",
+                  "  pm.expect(body.snake_or_ladder_to).to.eql(null);",
+                  "  pm.expect(body.finished).to.eql(false);",
+                  "  pm.expect(body.next_phase).to.eql('ROLL');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Game A - Carla path 2 (6)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{carlaToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dice\": 6\n}"
+            },
+            "url": "{{baseUrl}}/sessions/{{gameACode}}/roll"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test('matches the verified no-event board path', function () {",
+                  "  pm.expect(body.dice).to.eql(6);",
+                  "  pm.expect(body.from).to.eql(25);",
+                  "  pm.expect(body.to).to.eql(31);",
+                  "  pm.expect(body.tile_type).to.eql('NORMAL');",
+                  "  pm.expect(body.snake_or_ladder_to).to.eql(null);",
+                  "  pm.expect(body.finished).to.eql(false);",
+                  "  pm.expect(body.next_phase).to.eql('ROLL');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Game A - Ben path 3 (2)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dice\": 2\n}"
+            },
+            "url": "{{baseUrl}}/sessions/{{gameACode}}/roll"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test('matches the verified no-event board path', function () {",
+                  "  pm.expect(body.dice).to.eql(2);",
+                  "  pm.expect(body.from).to.eql(31);",
+                  "  pm.expect(body.to).to.eql(49);",
+                  "  pm.expect(body.tile_type).to.eql('LADDER');",
+                  "  pm.expect(body.snake_or_ladder_to).to.eql(49);",
+                  "  pm.expect(body.finished).to.eql(false);",
+                  "  pm.expect(body.next_phase).to.eql('ROLL');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Game A - Carla path 3 (2)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{carlaToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dice\": 2\n}"
+            },
+            "url": "{{baseUrl}}/sessions/{{gameACode}}/roll"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test('matches the verified no-event board path', function () {",
+                  "  pm.expect(body.dice).to.eql(2);",
+                  "  pm.expect(body.from).to.eql(31);",
+                  "  pm.expect(body.to).to.eql(49);",
+                  "  pm.expect(body.tile_type).to.eql('LADDER');",
+                  "  pm.expect(body.snake_or_ladder_to).to.eql(49);",
+                  "  pm.expect(body.finished).to.eql(false);",
+                  "  pm.expect(body.next_phase).to.eql('ROLL');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Game A - Ben path 4 (1)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dice\": 1\n}"
+            },
+            "url": "{{baseUrl}}/sessions/{{gameACode}}/roll"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test('matches the verified no-event board path', function () {",
+                  "  pm.expect(body.dice).to.eql(1);",
+                  "  pm.expect(body.from).to.eql(49);",
+                  "  pm.expect(body.to).to.eql(69);",
+                  "  pm.expect(body.tile_type).to.eql('LADDER');",
+                  "  pm.expect(body.snake_or_ladder_to).to.eql(69);",
+                  "  pm.expect(body.finished).to.eql(false);",
+                  "  pm.expect(body.next_phase).to.eql('ROLL');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Game A - Carla path 4 (1)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{carlaToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dice\": 1\n}"
+            },
+            "url": "{{baseUrl}}/sessions/{{gameACode}}/roll"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test('matches the verified no-event board path', function () {",
+                  "  pm.expect(body.dice).to.eql(1);",
+                  "  pm.expect(body.from).to.eql(49);",
+                  "  pm.expect(body.to).to.eql(69);",
+                  "  pm.expect(body.tile_type).to.eql('LADDER');",
+                  "  pm.expect(body.snake_or_ladder_to).to.eql(69);",
+                  "  pm.expect(body.finished).to.eql(false);",
+                  "  pm.expect(body.next_phase).to.eql('ROLL');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Game A - Ben path 5 (5)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dice\": 5\n}"
+            },
+            "url": "{{baseUrl}}/sessions/{{gameACode}}/roll"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test('matches the verified no-event board path', function () {",
+                  "  pm.expect(body.dice).to.eql(5);",
+                  "  pm.expect(body.from).to.eql(69);",
+                  "  pm.expect(body.to).to.eql(92);",
+                  "  pm.expect(body.tile_type).to.eql('LADDER');",
+                  "  pm.expect(body.snake_or_ladder_to).to.eql(92);",
+                  "  pm.expect(body.finished).to.eql(false);",
+                  "  pm.expect(body.next_phase).to.eql('ROLL');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Game A - Carla path 5 (5)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{carlaToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dice\": 5\n}"
+            },
+            "url": "{{baseUrl}}/sessions/{{gameACode}}/roll"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test('matches the verified no-event board path', function () {",
+                  "  pm.expect(body.dice).to.eql(5);",
+                  "  pm.expect(body.from).to.eql(69);",
+                  "  pm.expect(body.to).to.eql(92);",
+                  "  pm.expect(body.tile_type).to.eql('LADDER');",
+                  "  pm.expect(body.snake_or_ladder_to).to.eql(92);",
+                  "  pm.expect(body.finished).to.eql(false);",
+                  "  pm.expect(body.next_phase).to.eql('ROLL');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Game A - Ben path 6 (2)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dice\": 2\n}"
+            },
+            "url": "{{baseUrl}}/sessions/{{gameACode}}/roll"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test('matches the verified no-event board path', function () {",
+                  "  pm.expect(body.dice).to.eql(2);",
+                  "  pm.expect(body.from).to.eql(92);",
+                  "  pm.expect(body.to).to.eql(94);",
+                  "  pm.expect(body.tile_type).to.eql('NORMAL');",
+                  "  pm.expect(body.snake_or_ladder_to).to.eql(null);",
+                  "  pm.expect(body.finished).to.eql(false);",
+                  "  pm.expect(body.next_phase).to.eql('ROLL');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Game A - Carla path 6 (2)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{carlaToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dice\": 2\n}"
+            },
+            "url": "{{baseUrl}}/sessions/{{gameACode}}/roll"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test('matches the verified no-event board path', function () {",
+                  "  pm.expect(body.dice).to.eql(2);",
+                  "  pm.expect(body.from).to.eql(92);",
+                  "  pm.expect(body.to).to.eql(94);",
+                  "  pm.expect(body.tile_type).to.eql('NORMAL');",
+                  "  pm.expect(body.snake_or_ladder_to).to.eql(null);",
+                  "  pm.expect(body.finished).to.eql(false);",
+                  "  pm.expect(body.next_phase).to.eql('ROLL');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Game A - Ben path 7 (6)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dice\": 6\n}"
+            },
+            "url": "{{baseUrl}}/sessions/{{gameACode}}/roll"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test('matches the verified no-event board path', function () {",
+                  "  pm.expect(body.dice).to.eql(6);",
+                  "  pm.expect(body.from).to.eql(94);",
+                  "  pm.expect(body.to).to.eql(100);",
+                  "  pm.expect(body.tile_type).to.eql('NORMAL');",
+                  "  pm.expect(body.snake_or_ladder_to).to.eql(null);",
+                  "  pm.expect(body.finished).to.eql(true);",
+                  "  pm.expect(body.next_phase).to.eql('ROLL');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Game A - Carla path 7 (6)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{carlaToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dice\": 6\n}"
+            },
+            "url": "{{baseUrl}}/sessions/{{gameACode}}/roll"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test('matches the verified no-event board path', function () {",
+                  "  pm.expect(body.dice).to.eql(6);",
+                  "  pm.expect(body.from).to.eql(94);",
+                  "  pm.expect(body.to).to.eql(100);",
+                  "  pm.expect(body.tile_type).to.eql('NORMAL');",
+                  "  pm.expect(body.snake_or_ladder_to).to.eql(null);",
+                  "  pm.expect(body.finished).to.eql(true);",
+                  "  pm.expect(body.next_phase).to.eql(null);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Game A - Finished state",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/sessions/{{gameACode}}/state"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test('session finishes when both players finish', function () {",
+                  "  pm.expect(body.status).to.eql('FINISHED');",
+                  "  pm.expect(body.current_player).to.eql(null);",
+                  "  pm.expect(body.turn_phase).to.eql(null);",
+                  "  pm.expect(body.players.filter((p) => p.finish_position !== null)).to.have.length(2);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Game A - Leaderboard ranks both finishers",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/sessions/{{gameACode}}/leaderboard?limit=10"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                  "const players = pm.response.json().players;",
+                  "pm.test('finish order is 1 then 2', function () {",
+                  "  pm.expect(players.map((p) => p.rank)).to.eql([1, 2]);",
+                  "  pm.expect(players.map((p) => p.finish_position)).to.eql([1, 2]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Game A - Results reports two completed players",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Hub-Key",
+                "value": "{{hubKey}}"
+              }
+            ],
+            "url": "{{baseUrl}}/results?since={{gameplayStartedAt}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                  "const game = pm.response.json().results.find((g) => g.session_code === pm.collectionVariables.get('gameACode'));",
+                  "pm.test('Hub results include the completed Game A', function () {",
+                  "  pm.expect(game).to.exist;",
+                  "  pm.expect(game.players.filter((p) => p.completed)).to.have.length(2);",
+                  "  pm.expect(game.podium.map((p) => p.rank)).to.eql([1, 2]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Game B - Create",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{hostToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"question_set_id\": \"{{librarySetId}}\"\n}"
+            },
+            "url": "{{baseUrl}}/sessions"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 201', function () { pm.response.to.have.status(201); });",
+                  "const body = pm.response.json();",
+                  "pm.test('Game B starts WAITING', function () { pm.expect(body.status).to.eql('WAITING'); });",
+                  "pm.collectionVariables.set('gameBCode', body.code);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Game B - Ben joins",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nickname\": \"BenGameplayB\",\n  \"avatar_color\": \"BLUE\"\n}"
+            },
+            "url": "{{baseUrl}}/sessions/{{gameBCode}}/players"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 201', function () { pm.response.to.have.status(201); });",
+                  "pm.collectionVariables.set('gameBPlayer1', String(pm.response.json().player_id));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Game B - Carla joins",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{carlaToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nickname\": \"CarlaGameplayB\",\n  \"avatar_color\": \"GREEN\"\n}"
+            },
+            "url": "{{baseUrl}}/sessions/{{gameBCode}}/players"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 201', function () { pm.response.to.have.status(201); });",
+                  "pm.collectionVariables.set('gameBPlayer2', String(pm.response.json().player_id));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Game B - Start",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{hostToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"PLAYING\"\n}"
+            },
+            "url": "{{baseUrl}}/sessions/{{gameBCode}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Game B is PLAYING', function () { pm.expect(pm.response.json().status).to.eql('PLAYING'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Game B - Force question event on tile 7",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dice\": 6,\n  \"event\": \"QUESTION\"\n}"
+            },
+            "url": "{{baseUrl}}/sessions/{{gameBCode}}/roll"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test('tile 7 starts a question phase', function () {",
+                  "  pm.expect(body.to).to.eql(7);",
+                  "  pm.expect(body.tile_type).to.eql('EVENT');",
+                  "  pm.expect(body.next_phase).to.eql('QUESTION');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Game B - Question hides the answer",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/sessions/{{gameBCode}}/question"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test('four choices and no answer key', function () {",
+                  "  pm.expect(body.choices).to.have.length(4);",
+                  "  pm.expect(JSON.stringify(body)).to.not.include('is_correct');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Game B - Wrong answer moves back two",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"choice_index\": 4\n}"
+            },
+            "url": "{{baseUrl}}/sessions/{{gameBCode}}/answers"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test('wrong answer moves from 7 to 5', function () {",
+                  "  pm.expect(body.correct).to.eql(false);",
+                  "  pm.expect(body.from).to.eql(7);",
+                  "  pm.expect(body.to).to.eql(5);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Game B - Carla takes a safe turn",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{carlaToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dice\": 1\n}"
+            },
+            "url": "{{baseUrl}}/sessions/{{gameBCode}}/roll"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Carla moves from 1 to 2', function () {",
+                  "  pm.expect(pm.response.json().from).to.eql(1);",
+                  "  pm.expect(pm.response.json().to).to.eql(2);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Game B - Force a second question event",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dice\": 2,\n  \"event\": \"QUESTION\"\n}"
+            },
+            "url": "{{baseUrl}}/sessions/{{gameBCode}}/roll"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test('Ben reaches tile 7 and starts another question', function () {",
+                  "  pm.expect(body.from).to.eql(5);",
+                  "  pm.expect(body.to).to.eql(7);",
+                  "  pm.expect(body.next_phase).to.eql('QUESTION');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Game B - Choose correct option without answer leakage",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/sessions/{{gameBCode}}/question"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "const correctByQuestion = {",
+                  "  'What system do most libraries use to arrange books by subject?': 1,",
+                  "  'What do you need to borrow a book from the SorSU library?': 1,",
+                  "  'Which part of a book lists topics and the pages they appear on?': 2,",
+                  "  'What does OPAC stand for?': 2,",
+                  "  'Which of these should you NOT do in the library?': 3",
+                  "};",
+                  "pm.test('seeded question and answer key are never returned', function () {",
+                  "  pm.expect(body.choices).to.have.length(4);",
+                  "  pm.expect(JSON.stringify(body)).to.not.include('is_correct');",
+                  "  pm.expect(correctByQuestion[body.question]).to.be.a('number');",
+                  "});",
+                  "pm.collectionVariables.set('gameBCorrectChoice', String(correctByQuestion[body.question]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Game B - Correct answer moves forward two",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"choice_index\": \"{{gameBCorrectChoice}}\"\n}"
+            },
+            "url": "{{baseUrl}}/sessions/{{gameBCode}}/answers"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test('correct answer moves from 7 to 9', function () {",
+                  "  pm.expect(body.correct).to.eql(true);",
+                  "  pm.expect(body.from).to.eql(7);",
+                  "  pm.expect(body.to).to.eql(9);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Game B - Carla takes another safe turn",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{carlaToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dice\": 1\n}"
+            },
+            "url": "{{baseUrl}}/sessions/{{gameBCode}}/roll"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Carla moves from 2 to 3', function () {",
+                  "  pm.expect(pm.response.json().from).to.eql(2);",
+                  "  pm.expect(pm.response.json().to).to.eql(3);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Game B - Force punishment event on tile 15",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dice\": 6,\n  \"event\": \"PUNISHMENT\"\n}"
+            },
+            "url": "{{baseUrl}}/sessions/{{gameBCode}}/roll"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test('tile 15 starts punishment phase', function () {",
+                  "  pm.expect(body.to).to.eql(15);",
+                  "  pm.expect(body.tile_type).to.eql('EVENT');",
+                  "  pm.expect(body.next_phase).to.eql('PUNISH');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Game B - Self punishment target is rejected",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"target_player_id\": \"{{gameBPlayer1}}\",\n  \"amount\": 2\n}"
+            },
+            "url": "{{baseUrl}}/sessions/{{gameBCode}}/punish"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 409', function () { pm.response.to.have.status(409); });",
+                  "pm.test('INVALID_TARGET', function () { pm.expect(pm.response.json().error.code).to.eql('INVALID_TARGET'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Game B - Punish another unfinished player",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{playerToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"target_player_id\": \"{{gameBPlayer2}}\",\n  \"amount\": 2\n}"
+            },
+            "url": "{{baseUrl}}/sessions/{{gameBCode}}/punish"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test('Carla moves back and stays above tile 1', function () {",
+                  "  pm.expect(String(body.target_player_id)).to.eql(pm.collectionVariables.get('gameBPlayer2'));",
+                  "  pm.expect(body.from).to.eql(3);",
+                  "  pm.expect(body.to).to.eql(1);",
+                  "  pm.expect(body.next_phase).to.eql('ROLL');",
+                  "});"
                 ]
               }
             }

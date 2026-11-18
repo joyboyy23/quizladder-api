@@ -75,6 +75,13 @@ module.exports = (sequelize, DataTypes) => {
         tableName: 'turns',
         timestamps: false,
         freezeTableName: true,
+        indexes: [
+          {
+            unique: true,
+            fields: ['session_id', 'turn_number'],
+            name: 'turns_session_id_turn_number_unique',
+          },
+        ],
       }
     );
   

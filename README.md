@@ -123,6 +123,28 @@ Rules worth knowing:
 - Soft capacity is 4 players (`game-info.max_players`). Nickname and avatar color must be unique inside a session.
 - Closing a game sets `FINISHED` and `finished_at`, so it appears in `/results`.
 
+## Milestone M3 gameplay
+
+| Method | Path | Who may call it | Purpose |
+|---|---|---|---|
+| PATCH | /sessions/:code | HOST or ADMIN | Start with 2–4 seated players, or end the game manually |
+| GET | /sessions/:code/state | Public | Read current turn, timer, and player positions |
+| POST | /sessions/:code/roll | Seated current player | Roll the server-side die and resolve the landing tile |
+| GET | /sessions/:code/question | Current player | Read the pending question and four choices |
+| POST | /sessions/:code/answers | Current player | Answer the pending question with `choice_index` 1–4 |
+| POST | /sessions/:code/punish | Current player | Choose another unfinished player and a deduction of 1–6 |
+| GET | /sessions/:code/leaderboard?limit=10 | Public | Read finishers first, then unfinished players by position |
+
+Gameplay requests that change the game run in a database transaction and lock the game session. The state and leaderboard reads also process one expired phase timeout lazily; there are no background timers. A roll phase lasts 10 seconds and skips the turn without moving the player, a question phase lasts 15 seconds and moves the player back 3, and an expired punishment-choice phase ends the turn with no effect. The next phase timer begins when the timeout is processed.
+
+The server rolls a six-sided die. `dice` (1–6) and `event` (`QUESTION` or `PUNISHMENT`) may be supplied to `POST /roll` only as test overrides outside production; production ignores these fields. Event boxes activate only when dice movement lands directly on them. A question's correct answer moves the player forward 2, a wrong answer back 2, and the question response never includes `is_correct`. After question or punishment movement, snakes and ladders are applied. A punishment target moves back by the chosen amount (floor 1), then snake/ladder movement is checked for that target too.
+
+Players finish only by landing exactly on tile 100; movement past 100 bounces backward. Finished players stop taking turns, and the session becomes `FINISHED` only after every player finishes (a HOST or ADMIN may still end it manually). The leaderboard orders finishers by `finish_position`; unfinished players have no rank.
+
+Gameplay errors include `409 GAME_NOT_PLAYING`, `NOT_YOUR_TURN`, `WRONG_PHASE`, `NOT_ENOUGH_PLAYERS`, `ANSWER_TOO_LATE` and `INVALID_TARGET`; an account without a seat receives `403 NOT_SEATED`. Invalid request fields receive `400 VALIDATION_FAILED`.
+
+The merged `postman/QuizLadder.postman_collection.json` includes a **Play a whole game** folder with deterministic non-production dice/event scenarios.
+
 Demo school IDs for Postman (`postman/QuizLadder.postman_collection.json`), after a fresh `npm run db:reset`:
 
 | Header | Account | Useful for |
@@ -135,7 +157,7 @@ Demo school IDs for Postman (`postman/QuizLadder.postman_collection.json`), afte
 
 ## What "completed" means in my game
 
-A player has completed the game when they land exactly on tile 100 on the Snakes and Ladders board (a roll that goes past 100 bounces back) and their `finished_at` timestamp is recorded. The game session is marked as `FINISHED` when the top 3 players have finished, or when the host ends the game.
+A player has completed the game when they land exactly on tile 100 on the Snakes and Ladders board (a roll that goes past 100 bounces back) and their `finished_at` timestamp is recorded. The game session is marked as `FINISHED` when all players have finished, or when the host ends the game.
 
 Every player who finishes scores 100, because they landed exactly on tile 100. Their rank is the order they reached it: the first to land on tile 100 is rank 1, the second is rank 2, and so on. Players who did not finish have no rank and score their final board position.
 
