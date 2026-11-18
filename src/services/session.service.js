@@ -2,6 +2,9 @@
 const sessionRepository = require('../repositories/session.repository');
 const hostRepository = require('../repositories/host.repository');
 const boardRepository = require('../repositories/board.repository');
+const playerRepository = require('../repositories/player.repository');
+const turnRepository = require('../repositories/turn.repository');
+const gameplayService = require('./gameplay.service');
 const questionSetService = require('./question-set.service');
 const { AppError, notFound, conflict } = require('../errors/app-error');
 
@@ -62,29 +65,59 @@ function get(code) {
 }
 
 async function changeStatus(code, newStatus) {
-  const session = await findOrFail(code);
-  const current = session.status;
+  return sessionRepository.transaction(async (transaction) => {
+    const session = await sessionRepository.lockByCode(code, transaction);
+    if (!session) {
+      throw notFound('SESSION_NOT_FOUND', `No game has the code ${code}.`);
+    }
+    const current = session.status;
+    const allowed =
+      (current === 'WAITING' && (newStatus === 'PLAYING' || newStatus === 'FINISHED')) ||
+      (current === 'PLAYING' && newStatus === 'FINISHED');
 
-  const allowed =
-    (current === 'WAITING' && (newStatus === 'PLAYING' || newStatus === 'FINISHED')) ||
-    (current === 'PLAYING' && newStatus === 'FINISHED');
+    if (!allowed) {
+      throw conflict(
+        'INVALID_STATUS_TRANSITION',
+        `Cannot change status from ${current} to ${newStatus}.`
+      );
+    }
 
-  if (!allowed) {
-    throw conflict(
-      'INVALID_STATUS_TRANSITION',
-      `Cannot change status from ${current} to ${newStatus}.`
-    );
-  }
+    const now = new Date();
+    if (newStatus === 'PLAYING') {
+      const count = await playerRepository.countBySession(
+        session.session_id,
+        { transaction }
+      );
+      if (count < 2 || count > 4) {
+        throw conflict('NOT_ENOUGH_PLAYERS', 'A game needs 2 to 4 seated players to start.');
+      }
+      const players = await playerRepository.listByPlayerId(
+        session.session_id,
+        { transaction }
+      );
+      return sessionRepository.update(session, {
+        status: 'PLAYING',
+        current_player_id: players[0].player_id,
+        turn_phase: 'ROLL',
+        phase_started_at: now,
+        pending_question_id: null,
+        started_at: now,
+      }, { transaction });
+    }
 
-  const changes = { status: newStatus };
-  if (newStatus === 'PLAYING') {
-    changes.started_at = new Date();
-  }
-  if (newStatus === 'FINISHED') {
-    changes.finished_at = new Date();
-  }
-
-  return sessionRepository.update(session, changes);
+    if (current === 'PLAYING') {
+      await gameplayService.applyExpiredTimeout(session, now, transaction);
+    }
+    await turnRepository.closeOpenBySession(session.session_id, now, transaction);
+    return sessionRepository.update(session, {
+      status: 'FINISHED',
+      finished_at: now,
+      current_player_id: null,
+      turn_phase: null,
+      phase_started_at: null,
+      pending_question_id: null,
+    }, { transaction });
+  });
 }
 
 module.exports = { findOrFail, create, get, changeStatus };
