@@ -39,6 +39,35 @@ module.exports = (sequelize, DataTypes) => {
             isIn: [['WAITING', 'PLAYING', 'FINISHED']],
           },
         },
+
+        current_player_id: {
+          type: DataTypes.BIGINT,
+          allowNull: true,
+        },
+
+        turn_phase: {
+          type: DataTypes.STRING(20),
+          allowNull: true,
+          validate: {
+            isIn: [['ROLL', 'QUESTION', 'PUNISH']],
+          },
+        },
+
+        phase_started_at: {
+          type: DataTypes.DATE,
+          allowNull: true,
+        },
+
+        pending_question_id: {
+          type: DataTypes.BIGINT,
+          allowNull: true,
+        },
+
+        turn_number: {
+          type: DataTypes.INTEGER,
+          allowNull: false,
+          defaultValue: 0,
+        },
   
         created_at: {
           type: DataTypes.DATE,
