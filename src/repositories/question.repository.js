@@ -1,4 +1,5 @@
 // The only file that queries questions and answers (choices).
+const { Op } = require('sequelize');
 const { sequelize, QuestionSet, Question, Answer } = require('../models');
 
 const WITH_ANSWERS = [
@@ -25,6 +26,19 @@ function findInSet(setId, questionId, options = {}) {
 
 function countBySet(setId) {
   return Question.count({ where: { question_set_id: setId } });
+}
+
+function findAllForGame(setId, excludeQuestionIds, transaction) {
+  const where = { question_set_id: setId };
+  if (excludeQuestionIds.length > 0) {
+    where.question_id = { [Op.notIn]: excludeQuestionIds };
+  }
+  return Question.findAll({
+    where,
+    include: WITH_ANSWERS,
+    order: [['question_id', 'ASC']],
+    transaction,
+  });
 }
 
 function toAnswerRows(questionId, choices) {
@@ -76,5 +90,6 @@ function removeWithAnswers(question) {
 }
 
 module.exports = {
-  findPageBySet, findInSet, countBySet, createWithAnswers, updateWithAnswers, removeWithAnswers,
+  findPageBySet, findInSet, countBySet, findAllForGame,
+  createWithAnswers, updateWithAnswers, removeWithAnswers,
 };
