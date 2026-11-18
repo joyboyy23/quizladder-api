@@ -3,16 +3,16 @@
 # (the check needs at least 15 operations, each with a summary and its responses).
 openapi: 3.0.3
 info:
-  title: CHANGE_ME Your Game API
+  title: QuizLadder API
   version: 1.0.0
   description: >
-    CHANGE_ME: one paragraph about your game. Implements Hub Contract v1.3. Every error answers { "error": { "code",
+    Multiplayer educational Snake and Ladder game for the SorSU Bulan Campus library. Implements Hub Contract v1.3. Every error answers { "error": { "code",
     "message" } }.
 
 
     Log in with POST /auth/login, then click Authorize and paste the token.
   contact:
-    name: CHANGE_ME your name (your GitHub username)
+    name: Joenilo Estillero (joyboyy23)
 servers:
   - url: /api/v1
     description: This server
@@ -20,6 +20,8 @@ tags:
   - name: Hub Contract
     description: The endpoints every game provides to the Library Game Hub
   - name: Accounts
+  - name: Sessions
+    description: Lobbies, player turns, events, and game results
 components:
   securitySchemes:
     bearerAuth:
@@ -312,3 +314,303 @@ paths:
                     $ref: "#/components/schemas/User"
         "401":
           $ref: "#/components/responses/Unauthorized"
+  /sessions:
+    post:
+      tags:
+        - Sessions
+      summary: Create a WAITING game lobby
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - question_set_id
+              properties:
+                question_set_id:
+                  type: integer
+                  minimum: 1
+      responses:
+        "201":
+          description: The new lobby and its six-digit code
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /sessions/{code}:
+    parameters:
+      - name: code
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: "^[1-9][0-9]{5}$"
+    get:
+      tags:
+        - Sessions
+      summary: Read a game by its join code
+      responses:
+        "200":
+          description: The public session summary
+        "404":
+          $ref: "#/components/responses/NotFound"
+    patch:
+      tags:
+        - Sessions
+      summary: Start or manually finish a game
+      description: Starting requires 2–4 seated players; a game otherwise finishes automatically when all players finish.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - status
+              properties:
+                status:
+                  type: string
+                  enum: [PLAYING, FINISHED]
+      responses:
+        "200":
+          description: The updated session
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          description: NOT_ENOUGH_PLAYERS or INVALID_STATUS_TRANSITION
+  /sessions/{code}/players:
+    parameters:
+      - name: code
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: "^[1-9][0-9]{5}$"
+    get:
+      tags:
+        - Sessions
+      summary: List seats in a game
+      responses:
+        "200":
+          description: Players ordered by board position
+    post:
+      tags:
+        - Sessions
+      summary: Join a lobby or rejoin an existing seat
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [nickname, avatar_color]
+              properties:
+                nickname:
+                  type: string
+                avatar_color:
+                  type: string
+                  enum: [RED, BLUE, GREEN, YELLOW]
+      responses:
+        "200":
+          description: The existing seat
+        "201":
+          description: The new seat
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /sessions/{code}/state:
+    get:
+      tags:
+        - Sessions
+      summary: Read public gameplay state
+      description: Applies one expired timeout lazily. Returns no internal session identifier.
+      parameters:
+        - name: code
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: "^[1-9][0-9]{5}$"
+      responses:
+        "200":
+          description: Current player, phase, seconds remaining, and player positions
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /sessions/{code}/roll:
+    post:
+      tags:
+        - Sessions
+      summary: Roll and move the current player
+      description: The server rolls the die. Optional dice/event fields are test-only and ignored in production.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: code
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: "^[1-9][0-9]{5}$"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                dice:
+                  type: integer
+                  minimum: 1
+                  maximum: 6
+                event:
+                  type: string
+                  enum: [QUESTION, PUNISHMENT]
+      responses:
+        "200":
+          description: Dice result, movement, tile, and next phase
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          description: GAME_NOT_PLAYING, NOT_YOUR_TURN, or WRONG_PHASE
+  /sessions/{code}/question:
+    get:
+      tags:
+        - Sessions
+      summary: Read the current player's pending question
+      description: Returns four choices without revealing the correct choice.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: code
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: "^[1-9][0-9]{5}$"
+      responses:
+        "200":
+          description: Question text, four choices, and seconds remaining
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          description: GAME_NOT_PLAYING, NOT_YOUR_TURN, or WRONG_PHASE
+  /sessions/{code}/answers:
+    post:
+      tags:
+        - Sessions
+      summary: Answer the pending question
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: code
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: "^[1-9][0-9]{5}$"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [choice_index]
+              properties:
+                choice_index:
+                  type: integer
+                  minimum: 1
+                  maximum: 4
+      responses:
+        "200":
+          description: Answer result and movement
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          description: ANSWER_TOO_LATE, GAME_NOT_PLAYING, NOT_YOUR_TURN, or WRONG_PHASE
+  /sessions/{code}/punish:
+    post:
+      tags:
+        - Sessions
+      summary: Apply a punishment to another unfinished player
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: code
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: "^[1-9][0-9]{5}$"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [target_player_id, amount]
+              properties:
+                target_player_id:
+                  type: integer
+                  minimum: 1
+                amount:
+                  type: integer
+                  minimum: 1
+                  maximum: 6
+      responses:
+        "200":
+          description: The target's movement and next phase
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          description: INVALID_TARGET, GAME_NOT_PLAYING, NOT_YOUR_TURN, or WRONG_PHASE
+  /sessions/{code}/leaderboard:
+    get:
+      tags:
+        - Sessions
+      summary: Read finish order and current player positions
+      parameters:
+        - name: code
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: "^[1-9][0-9]{5}$"
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+      responses:
+        "200":
+          description: Finishers by finish position, then unfinished players by position
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
