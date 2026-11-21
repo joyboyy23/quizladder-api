@@ -182,6 +182,21 @@ Every player who finishes scores 100, because they landed exactly on tile 100. T
 - Game `482913` (FINISHED): AnaReads, BookwormBen and CarlaQuiz reached tile 100 exactly; DinoDice stopped on tile 87
 - Game `735104` (PLAYING): three players still on the board, including AnaReads again (one seat per account per game)
 
+## How to run the tests
+
+The test database is `<DB_NAME>_test`. Jest global setup rebuilds it from migrations and seeders before every run, so your own development data is never used.
+
+```bash
+npm test
+npm run test:coverage
+```
+
+Unit tests live in `tests/unit`, HTTP tests live in `tests/api`, and shared setup/helpers live in `tests/setup`. HTTP tests use freshly registered accounts and never depend on passwords other than the seeded demo password or the passwords they register themselves.
+
+## Running on a server
+
+Set `DATABASE_URL` for the server's PostgreSQL connection. `DB_SSL` enables encrypted PostgreSQL connections when required. Set `ADMIN_SCHOOL_ID` and `ADMIN_PASSWORD` once when starting a server; `npm run start:render` runs migrations, creates the first admin, and starts the API.
+
 ## Database scripts
 
 | Command | What it does |

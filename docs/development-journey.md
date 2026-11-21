@@ -20,7 +20,7 @@ One entry per milestone, written the week you did it. Newest at the bottom.
 - Dates worked: Nov 17, 2026 · Time spent: [student writes the hours]
 - Goal: Give hosts a question bank: paged lists, nested questions and choices, and a cover upload.
 - What I built: migrations `db/migrations/20261117020000-add-owner-and-cover-to-question-sets.js` and `db/migrations/20261117020100-add-position-to-questions.js`; seeders `db/seeders/20261117020200-demo-question-set-owners.js` and `db/seeders/20261117020300-demo-question-positions.js`; ownership, cover and position model fields; `src/lib/cover-files.js`, `src/middlewares/owned-question-set.js`, and the `question.validator`, `question.repository`, `question.service`, and `question.controller` layers; updated question-set layers, session repository, routes and constraint map. Endpoints include paged/searchable `GET /question-sets`, `GET /question-sets/:id?include=questions`, nested question list/create/edit/delete, and `PUT /question-sets/:id/cover`. Updated the Postman collection, README and changelog.
-- Evidence: [pull request link: add after opening the PR] · <three real commit hashes from `git log --oneline`>
+- Evidence: https://github.com/joyboyy23/quizladder-api/pull/5 · e601277 test(postman): add the question bank folder and fixtures; 53f194a feat(routes): add nested question routes, cover upload and position conflict; dfa6ed3 feat(questions): add nested questions with transactions
 - Problem I hit: `npm run check` first failed the cover fetch because the pre-request script used the collection's local port 3001 while CI runs the API on port 3099.
 - How I solved it: I changed the script to resolve the effective `baseUrl`, then reran the check; all 120 Postman requests and 241 assertions passed.
 - Decision I made and why: Question sets have an owner (`owner_id`); only the owner or an ADMIN may change them, and a set used by a game is frozen. Cost: a seeded set needed an owner, so a new seeder assigns Faye.
@@ -41,6 +41,16 @@ One entry per milestone, written the week you did it. Newest at the bottom.
 - AI tools: GitHub Copilot (agent mode) implemented this milestone from the user-provided gameplay requirements.
 
 ## M4 · Automated tests and server preparation
+- Dates worked: Nov 18, 2026 · Time spent: [student fills in hours]
+- Goal: Add deterministic automated coverage and prepare the API for a server environment with no demo seeders.
+- What I built: Jest unit suites and supertest HTTP suites in `tests/unit` and `tests/api`; 117 tests with 96.23% line coverage; shared test helpers in `tests/setup`; separate test-database configuration; URL/SSL database support; Helmet, CORS and trust proxy middleware; `start:render`; and on-demand librarian host creation.
+- Evidence: [student writes pull request link and hashes ...]
+- Problem I hit: The old results example unit test ranked players by score, but this project ranks finishers by finish_position. A server database had no seeded librarian host, so creating a game could return 500. Tests also needed to avoid leaving accounts in games or changing seeded accounts.
+- How I solved it: I rewrote the stale results test with finish-position and incomplete-player cases. I made session creation find or create the librarian host when it is missing. I kept local separate database settings and used DATABASE_URL only for a server, while test runs use the _test database. I used freshly registered players in HTTP tests and finished games at the end when needed.
+- Decision I made and why: The host row is created on demand because Render does not run seeders, and live session creation otherwise fails with no librarian host. Tests use freshly registered players instead of changing seeded accounts, and finish games at the end of suites. The stale score-based example unit test was replaced with finish-position ranking and board/game-rule tests. Cost: extra test setup and cleanup, plus separate test state isolation.
+- Changes to my design set: none in the ERD; added the server environment keys `DATABASE_URL`, `DB_SSL`, `ADMIN_SCHOOL_ID` and `ADMIN_PASSWORD`.
+- What I would explain to a classmate: A unit test with jest.mock replaces repositories, so it tests a service rule without loading or changing a real database. An HTTP test with supertest sends a real request through Express, validation, controllers, services and repositories. The test database is separate and named _test, and global setup rebuilds it so test runs do not use my own data. Helmet adds safe response headers, CORS limits browser access to listed origins, and trust proxy tells Express that a server proxy placed before the API is one hop away.
+- AI tools: GitHub Copilot agent mode implemented this milestone from the user-provided guide.
 
 ## M5 · API documentation and deployment
 
