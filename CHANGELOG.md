@@ -10,6 +10,7 @@ All notable changes, newest first.
 - Added Swagger UI at `/api/v1/docs/` and the raw OpenAPI document at `/api/v1/openapi.json`.
 - Enabled the documentation API test and added checks for `$ref` resolution, required paths and allowed security schemes.
 - Corrected stale examples and response codes to match the real validators, serializers and Hub Contract.
+- Added Render Blueprint deployment guidance, live API and Swagger links, and free-plan setup notes.
 
 ## 1.4.0 (Week 14): tests and server preparation
 - Added Jest unit and supertest HTTP tests: 117 tests across mocked service suites and real API flows, with 96.23% line coverage.

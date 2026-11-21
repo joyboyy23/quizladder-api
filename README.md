@@ -1,5 +1,8 @@
 # QuizLadder API
 
+Live API: https://quizladder-joyboyy23.onrender.com/api/v1
+[![check](https://github.com/joyboyy23/quizladder-api/actions/workflows/check.yml/badge.svg)](https://github.com/joyboyy23/quizladder-api/actions/workflows/check.yml)
+
 Backend API for QuizLadder, a tournament game for the SorSU Bulan Campus library.
 CS 313 Software Engineering 1, A.Y. 2026-2027.
 
@@ -64,7 +67,9 @@ To test `/results` locally (for example in Postman), add the request header `X-H
 
 When the API is running locally, Swagger UI is available at `http://localhost:3001/api/v1/docs/` and the raw OpenAPI document is available at `http://localhost:3001/api/v1/openapi.json`.
 
-In Swagger UI, call `POST /auth/login`, copy the returned bearer token, click **Authorize**, and enter `Bearer <token>` for protected endpoints. For Hub Contract results, use the `X-Hub-Key` header; locally the key is `dev-hub-key`. The live Swagger link will be added in the deployment milestone.
+Live Swagger UI: https://quizladder-joyboyy23.onrender.com/api/v1/docs/
+
+In Swagger UI, call `POST /auth/login`, copy the returned bearer token, click **Authorize**, and enter `Bearer <token>` for protected endpoints. For Hub Contract results, use the `X-Hub-Key` header; locally the key is `dev-hub-key`. The live Swagger UI link is listed above.
 
 ## Authentication
 
@@ -202,6 +207,20 @@ Unit tests live in `tests/unit`, HTTP tests live in `tests/api`, and shared setu
 ## Running on a server
 
 Set `DATABASE_URL` for the server's PostgreSQL connection. `DB_SSL` enables encrypted PostgreSQL connections when required. Set `ADMIN_SCHOOL_ID` and `ADMIN_PASSWORD` once when starting a server; `npm run start:render` runs migrations, creates the first admin, and starts the API.
+
+## Deploying to Render
+
+In the Render dashboard, choose **New -> Blueprint**, select this repository, and let Render use `render.yaml`. Type these four values into Render by hand: `HUB_API_KEY`, `CORS_ORIGINS`, `ADMIN_SCHOOL_ID`, and `ADMIN_PASSWORD`.
+
+The `start:render` command runs database migrations, creates the first admin, and starts the API. It does not run seeders, so the live database starts empty apart from the admin account.
+
+The free plan's web service sleeps after 15 minutes without activity and takes about a minute to wake. Its database expires 30 days after creation, and there is no persistent disk, so uploaded covers disappear when the service restarts.
+
+Check that the API is up at `/api/v1/health`; a healthy response shows `"database": "up"`.
+
+Live database created: November 21. Expires 30 days after creation: [student writes the date].
+
+To start using an empty live database, log in as the admin, register accounts, and promote the host account.
 
 ## Database scripts
 
