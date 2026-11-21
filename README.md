@@ -48,7 +48,7 @@ npm run dev
 | DB_PASSWORD | (your own) | Database password. Never commit this. |
 | HUB_API_KEY | dev-hub-key | Key the Library Game Hub sends to read results. The library gives the real one at deployment. |
 
-## Endpoints (Hub Contract v1.2)
+## Endpoints (Hub Contract v1.3)
 
 Base URL: `http://localhost:3001/api/v1`
 
@@ -59,6 +59,12 @@ Base URL: `http://localhost:3001/api/v1`
 | GET | /results | Finished games, every player, and the top 3. Needs the `X-Hub-Key` header. Optional `?since=` | 200 (401 without the key) |
 
 To test `/results` locally (for example in Postman), add the request header `X-Hub-Key: dev-hub-key`. A plain browser visit cannot send it, so it always gets 401.
+
+## API documentation
+
+When the API is running locally, Swagger UI is available at `http://localhost:3001/api/v1/docs/` and the raw OpenAPI document is available at `http://localhost:3001/api/v1/openapi.json`.
+
+In Swagger UI, call `POST /auth/login`, copy the returned bearer token, click **Authorize**, and enter `Bearer <token>` for protected endpoints. For Hub Contract results, use the `X-Hub-Key` header; locally the key is `dev-hub-key`. The live Swagger link will be added in the deployment milestone.
 
 ## Authentication
 

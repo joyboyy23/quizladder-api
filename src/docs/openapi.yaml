@@ -1,13 +1,11 @@
-# Week 15 kit: starter OpenAPI document. The Hub Contract and account endpoints are written for you.
-# Replace every CHANGE_ME, then add one entry under paths for EVERY endpoint of your game
-# (the check needs at least 15 operations, each with a summary and its responses).
 openapi: 3.0.3
 info:
   title: QuizLadder API
-  version: 1.0.0
+  version: 1.5.0
   description: >
-    Multiplayer educational Snake and Ladder game for the SorSU Bulan Campus library. Implements Hub Contract v1.3. Every error answers { "error": { "code",
-    "message" } }.
+    Multiplayer educational Snake and Ladder game for the SorSU Bulan Campus library.
+    Implements Hub Contract v1.3. Every error answers
+    { "error": { "code", "message" } }.
 
 
     Log in with POST /auth/login, then click Authorize and paste the token.
@@ -15,13 +13,22 @@ info:
     name: Joenilo Estillero (joyboyy23)
 servers:
   - url: /api/v1
-    description: This server
+    description: This API server
 tags:
   - name: Hub Contract
-    description: The endpoints every game provides to the Library Game Hub
+    description: Endpoints provided to the Library Game Hub
   - name: Accounts
+    description: Registration, login, and the current account
+  - name: Users
+    description: Administrator-only account management
+  - name: Question Sets
+    description: Question-set management; HOST or ADMIN is required
+  - name: Questions
+    description: Nested question-bank management; HOST or ADMIN is required
   - name: Sessions
-    description: Lobbies, player turns, events, and game results
+    description: Lobbies and seated player management
+  - name: Gameplay
+    description: Public and player-only live game actions
 components:
   securitySchemes:
     bearerAuth:
@@ -34,9 +41,48 @@ components:
       in: header
       name: X-Hub-Key
       description: The key the Library Game Hub sends
+  parameters:
+    SessionCode:
+      name: code
+      in: path
+      required: true
+      schema:
+        type: string
+        pattern: ^[1-9][0-9]{5}$
+    QuestionSetId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+        minimum: 1
+    QuestionId:
+      name: questionId
+      in: path
+      required: true
+      schema:
+        type: integer
+        minimum: 1
+    Page:
+      name: page
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    Limit:
+      name: limit
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 50
+        default: 10
   responses:
     BadRequest:
-      description: The request is malformed (a field, the URL or the JSON itself)
+      description: The request is malformed
       content:
         application/json:
           schema:
@@ -44,12 +90,12 @@ components:
           example:
             error:
               code: VALIDATION_FAILED
-              message: title must be 3 to 150 characters long
+              message: name must be 3 to 100 characters long
               details:
-                - field: title
-                  message: title must be 3 to 150 characters long
+                - field: name
+                  message: name must be 3 to 100 characters long
     Unauthorized:
-      description: No login, or the token is not valid
+      description: No login or the token is not valid
       content:
         application/json:
           schema:
@@ -57,9 +103,9 @@ components:
           example:
             error:
               code: AUTH_REQUIRED
-              message: "Log in first: send the header Authorization: Bearer <token>."
+              message: Log in first
     Forbidden:
-      description: Logged in, but not allowed to do this
+      description: Logged in, but not allowed to perform the action
       content:
         application/json:
           schema:
@@ -69,13 +115,13 @@ components:
               code: FORBIDDEN
               message: This question set belongs to another host.
     NotFound:
-      description: That thing does not exist
+      description: The requested resource does not exist
       content:
         application/json:
           schema:
             $ref: "#/components/schemas/Error"
     Conflict:
-      description: Well formed and allowed, but it clashes with the current state
+      description: The request conflicts with the current state
       content:
         application/json:
           schema:
@@ -83,14 +129,11 @@ components:
   schemas:
     Error:
       type: object
-      required:
-        - error
+      required: [error]
       properties:
         error:
           type: object
-          required:
-            - code
-            - message
+          required: [code, message]
           properties:
             code:
               type: string
@@ -108,27 +151,49 @@ components:
                     type: string
     User:
       type: object
+      required: [user_id, school_id, full_name, email, role, created_at]
       properties:
         user_id:
           type: integer
-          example: 1
         school_id:
           type: string
-          example: 2099-0001
+          example: FAC-0042
         full_name:
           type: string
           example: Maria Ong
         email:
           type: string
           format: email
+          example: maria@sorsu.edu.ph
         role:
           type: string
-          enum:
-            - PLAYER
-            - HOST
-            - ADMIN
+          enum: [PLAYER, HOST, ADMIN]
+        created_at:
+          type: string
+          format: date-time
+    UserEnvelope:
+      type: object
+      required: [user]
+      properties:
+        user:
+          $ref: "#/components/schemas/User"
+    LoginResponse:
+      type: object
+      required: [token, token_type, expires_in, user]
+      properties:
+        token:
+          type: string
+        token_type:
+          type: string
+          enum: [Bearer]
+        expires_in:
+          type: string
+          example: 1h
+        user:
+          $ref: "#/components/schemas/User"
     Meta:
       type: object
+      required: [page, limit, total, pages]
       properties:
         page:
           type: integer
@@ -142,183 +207,661 @@ components:
         pages:
           type: integer
           example: 3
+    Choice:
+      type: object
+      required: [choice_index, text, is_correct]
+      properties:
+        choice_index:
+          type: integer
+          minimum: 1
+          maximum: 4
+        text:
+          type: string
+        is_correct:
+          type: boolean
+    Question:
+      type: object
+      required: [id, position, text, choices]
+      properties:
+        id:
+          type: integer
+        position:
+          type: integer
+        text:
+          type: string
+        choices:
+          type: array
+          minItems: 4
+          maxItems: 4
+          items:
+            $ref: "#/components/schemas/Choice"
+    QuestionSet:
+      type: object
+      required: [id, name, owner_id, cover_url, created_at]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        owner_id:
+          type: integer
+          nullable: true
+        cover_url:
+          type: string
+          nullable: true
+          example: /uploads/covers/set-1-<uuid>.png
+        created_at:
+          type: string
+          format: date-time
+        questions:
+          type: array
+          items:
+            $ref: "#/components/schemas/Question"
+    QuestionSetEnvelope:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/QuestionSet"
+        meta:
+          $ref: "#/components/schemas/Meta"
+    QuestionEnvelope:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Question"
+        meta:
+          $ref: "#/components/schemas/Meta"
+    Session:
+      type: object
+      required: [code, status, question_set_id, host_id, started_at, finished_at]
+      properties:
+        code:
+          type: string
+          pattern: ^[1-9][0-9]{5}$
+        status:
+          type: string
+          enum: [WAITING, PLAYING, FINISHED]
+        question_set_id:
+          type: integer
+        host_id:
+          type: integer
+        started_at:
+          type: string
+          format: date-time
+        finished_at:
+          type: string
+          format: date-time
+          nullable: true
+    Player:
+      type: object
+      required: [player_id, nickname, avatar_color, position]
+      properties:
+        player_id:
+          type: integer
+        nickname:
+          type: string
+        avatar_color:
+          type: string
+          enum: [RED, BLUE, GREEN, YELLOW]
+        position:
+          type: integer
+    JoinResponse:
+      type: object
+      required: [player_id, nickname, avatar_color, position, rejoined, session]
+      properties:
+        player_id:
+          type: integer
+        nickname:
+          type: string
+        avatar_color:
+          type: string
+          enum: [RED, BLUE, GREEN, YELLOW]
+        position:
+          type: integer
+        rejoined:
+          type: boolean
+        session:
+          type: object
+          required: [code, status]
+          properties:
+            code:
+              type: string
+            status:
+              type: string
+              enum: [WAITING, PLAYING, FINISHED]
+    PlayersList:
+      type: object
+      required: [session, players]
+      properties:
+        session:
+          $ref: "#/components/schemas/Session"
+        players:
+          type: array
+          items:
+            $ref: "#/components/schemas/Player"
+    GameState:
+      type: object
+      required: [status, current_player, turn_phase, seconds_left, server_time, players]
+      properties:
+        status:
+          type: string
+          enum: [WAITING, PLAYING, FINISHED]
+        current_player:
+          type: object
+          nullable: true
+          properties:
+            player_id:
+              type: integer
+            nickname:
+              type: string
+        turn_phase:
+          type: string
+          nullable: true
+          enum: [ROLL, QUESTION, PUNISH]
+        seconds_left:
+          type: integer
+        server_time:
+          type: string
+          format: date-time
+        players:
+          type: array
+          items:
+            type: object
+            required: [player_id, nickname, avatar_color, position, finish_position]
+            properties:
+              player_id:
+                type: integer
+              nickname:
+                type: string
+              avatar_color:
+                type: string
+                enum: [RED, BLUE, GREEN, YELLOW]
+              position:
+                type: integer
+              finish_position:
+                type: integer
+                nullable: true
+    RollResult:
+      type: object
+      required: [dice, from, to, tile_type, snake_or_ladder_to, finished, next_phase]
+      properties:
+        dice:
+          type: integer
+          minimum: 1
+          maximum: 6
+        from:
+          type: integer
+        to:
+          type: integer
+        tile_type:
+          type: string
+          enum: [NORMAL, EVENT, SNAKE, LADDER]
+        snake_or_ladder_to:
+          type: integer
+          nullable: true
+        finished:
+          type: boolean
+        next_phase:
+          type: string
+          nullable: true
+          enum: [ROLL, QUESTION, PUNISH]
+    PendingQuestion:
+      type: object
+      required: [question_id, question, choices, seconds_left]
+      properties:
+        question_id:
+          type: integer
+        question:
+          type: string
+        choices:
+          type: array
+          items:
+            type: object
+            required: [choice_index, text]
+            properties:
+              choice_index:
+                type: integer
+                minimum: 1
+                maximum: 4
+              text:
+                type: string
+        seconds_left:
+          type: integer
+    AnswerResult:
+      type: object
+      required: [correct, from, to, finished, next_phase]
+      properties:
+        correct:
+          type: boolean
+        from:
+          type: integer
+        to:
+          type: integer
+        finished:
+          type: boolean
+        next_phase:
+          type: string
+          nullable: true
+          enum: [ROLL, QUESTION, PUNISH]
+    PunishResult:
+      type: object
+      required: [target_player_id, from, to, finished, next_phase]
+      properties:
+        target_player_id:
+          type: integer
+        from:
+          type: integer
+        to:
+          type: integer
+        finished:
+          type: boolean
+        next_phase:
+          type: string
+          nullable: true
+          enum: [ROLL, QUESTION, PUNISH]
+    Leaderboard:
+      type: object
+      required: [players]
+      properties:
+        players:
+          type: array
+          items:
+            type: object
+            required: [rank, player_id, nickname, position, finish_position]
+            properties:
+              rank:
+                type: integer
+                nullable: true
+              player_id:
+                type: integer
+              nickname:
+                type: string
+              position:
+                type: integer
+              finish_position:
+                type: integer
+                nullable: true
+    ResultsResponse:
+      type: object
+      required: [game, developer, generated_at, results]
+      properties:
+        game:
+          type: string
+          example: quizladder
+        developer:
+          type: string
+          example: joyboyy23
+        generated_at:
+          type: string
+          format: date-time
+        results:
+          type: array
+          items:
+            type: object
+            required: [session_code, started_at, ended_at, players, podium]
+            properties:
+              session_code:
+                type: string
+              started_at:
+                type: string
+                format: date-time
+                nullable: true
+              ended_at:
+                type: string
+                format: date-time
+              players:
+                type: array
+                items:
+                  type: object
+                  required: [school_id, nickname, score, completed, finish_position, rank]
+                  properties:
+                    school_id:
+                      type: string
+                    nickname:
+                      type: string
+                    score:
+                      type: integer
+                    completed:
+                      type: boolean
+                    finish_position:
+                      type: integer
+                      nullable: true
+                    rank:
+                      type: integer
+                      nullable: true
+              podium:
+                type: array
+                items:
+                  type: object
+                  required: [rank, school_id, nickname, score]
+                  properties:
+                    rank:
+                      type: integer
+                    school_id:
+                      type: string
+                    nickname:
+                      type: string
+                    score:
+                      type: integer
 paths:
   /health:
     get:
-      tags:
-        - Hub Contract
-      summary: Is the API up, and can it reach the database?
+      tags: [Hub Contract]
+      summary: Check API and database health
+      security: []
       responses:
         "200":
-          description: Up
+          description: The API and database are reachable
           content:
             application/json:
+              schema:
+                type: object
               example:
                 status: ok
-                service: aklat-arena-api
-                version: 1.4.0
+                service: quizladder-api
+                version: 1.5.0
                 database: up
                 uptime_seconds: 42
-                timestamp: 2026-11-25T02:00:00.000Z
+                timestamp: 2026-11-21T02:00:00.000Z
         "503":
           description: The database cannot be reached
   /game-info:
     get:
-      tags:
-        - Hub Contract
-      summary: What the Hub shows about this game
+      tags: [Hub Contract]
+      summary: Get Hub game card information
+      security: []
       responses:
         "200":
-          description: The game card
+          description: The QuizLadder game card
           content:
             application/json:
+              schema:
+                type: object
               example:
-                slug: your-game-slug
-                name: Your Game
-                team: Your group (3-1)
-                developer: your-github-username
-                description: One sentence.
+                slug: quizladder
+                name: QuizLadder
+                team: Team 8 (3-1)
+                developer: joyboyy23
+                description: Multiplayer educational Snake and Ladder game for the SorSU Bulan Campus library.
                 min_players: 2
-                max_players: 60
-                version: 1.0.0
+                max_players: 4
+                version: 1.5.0
   /results:
     get:
-      tags:
-        - Hub Contract
-      summary: Finished games, every player, and the podium (rule 7)
+      tags: [Hub Contract]
+      summary: Get finished games for the Library Game Hub
+      description: Requires the X-Hub-Key header. The optional since value filters by game end date-time.
       security:
         - hubKey: []
       parameters:
         - name: since
           in: query
-          description: Only games that ended after this date and time
+          required: false
           schema:
             type: string
             format: date-time
       responses:
         "200":
-          description: The finished games
-          oldest first: null
+          description: Finished games in the Hub Contract format
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultsResponse"
         "400":
-          $ref: "#/components/responses/BadRequest"
+          description: The since parameter is not a date and time
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: INVALID_SINCE
+                  message: since must be a date and time, for example 2026-10-20T00:00:00Z.
         "401":
-          description: The X-Hub-Key header is missing or wrong
+          description: The hub key is missing or wrong
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: HUB_KEY_REQUIRED
+                  message: X-Hub-Key is required.
   /auth/register:
     post:
-      tags:
-        - Accounts
-      summary: Create a PLAYER account
-      description: A role in the body is ignored. Admins promote hosts with PATCH /users/{id}/role.
+      tags: [Accounts]
+      summary: Register a PLAYER account
+      description: A role in the body is ignored; admins promote accounts through PATCH /users/{id}/role.
+      security: []
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required:
-                - school_id
-                - full_name
-                - email
-                - password
+              required: [school_id, full_name, email, password]
               properties:
                 school_id:
                   type: string
-                  pattern: ^\d{4}-\d{4}$
-                  example: 2099-3001
+                  pattern: ^[A-Z0-9]{3,6}-[0-9]{3,5}$
+                  example: 2023-00123
                 full_name:
                   type: string
                   minLength: 2
                   maxLength: 100
-                  example: Nina Cruz
+                  example: Maria Ong
                 email:
                   type: string
                   format: email
-                  example: nina@aklatarena.test
+                  example: maria@sorsu.edu.ph
                 password:
                   type: string
                   minLength: 8
                   maxLength: 72
-                  description: At least one letter and one number
                   example: Libro-2026
+            example:
+              school_id: 2023-00123
+              full_name: Maria Ong
+              email: maria@sorsu.edu.ph
+              password: Libro-2026
       responses:
         "201":
-          description: Created
+          description: Registered account
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  user:
-                    $ref: "#/components/schemas/User"
+                $ref: "#/components/schemas/UserEnvelope"
         "400":
           $ref: "#/components/responses/BadRequest"
         "409":
-          description: SCHOOL_ID_TAKEN or EMAIL_TAKEN
+          $ref: "#/components/responses/Conflict"
   /auth/login:
     post:
-      tags:
-        - Accounts
-      summary: School ID and password in, a token out
+      tags: [Accounts]
+      summary: Log in and receive a bearer token
+      description: Unknown account and wrong-password failures use the same non-specific answer.
+      security: []
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required:
-                - school_id
-                - password
+              required: [school_id, password]
               properties:
                 school_id:
                   type: string
-                  example: 2099-0001
+                  example: 2023-00123
                 password:
                   type: string
-                  example: Aklat-Demo-2026
+                  example: Libro-2026
+            example:
+              school_id: 2023-00123
+              password: Libro-2026
       responses:
         "200":
-          description: Logged in
+          description: Login succeeded
           content:
             application/json:
-              example:
-                token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIn0.sig
-                token_type: Bearer
-                expires_in: 1h
-                user:
-                  user_id: 1
-                  school_id: 2099-0001
-                  full_name: Maria Ong
-                  email: maria.ong@aklatarena.test
-                  role: HOST
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
-          description: INVALID_CREDENTIALS
-          the same answer for an unknown school ID and a wrong password: null
+          description: School ID or password is invalid
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: INVALID_CREDENTIALS
+                  message: Invalid school ID or password.
   /auth/me:
     get:
-      tags:
-        - Accounts
-      summary: The account of the token
+      tags: [Accounts]
+      summary: Get the current account
       security:
         - bearerAuth: []
       responses:
         "200":
-          description: The account
+          description: Current account
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  user:
-                    $ref: "#/components/schemas/User"
+                $ref: "#/components/schemas/UserEnvelope"
         "401":
           $ref: "#/components/responses/Unauthorized"
-  /sessions:
+  /users:
+    get:
+      tags: [Users]
+      summary: List all accounts
+      description: ADMIN only; other roles receive 403 FORBIDDEN.
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Plain array of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /users/{id}/role:
+    patch:
+      tags: [Users]
+      summary: Change an account role
+      description: ADMIN only; an account cannot change its own role.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [role]
+              properties:
+                role:
+                  type: string
+                  enum: [PLAYER, HOST, ADMIN]
+            example:
+              role: HOST
+      responses:
+        "200":
+          description: The bare updated user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          description: The user does not exist
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: USER_NOT_FOUND
+                  message: User not found.
+        "409":
+          description: The account cannot change its own role
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: CANNOT_CHANGE_OWN_ROLE
+                  message: You cannot change your own role.
+  /question-sets:
+    get:
+      tags: [Question Sets]
+      summary: Search and page question sets
+      description: HOST or ADMIN only. Search is case-insensitive; percent and underscore in q are literal characters.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum: [id, name, created_at]
+        - name: order
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+        - name: q
+          in: query
+          description: Literal case-insensitive search text; 1-100 characters
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 100
+      responses:
+        "200":
+          description: Paged question-set data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuestionSetEnvelope"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
     post:
-      tags:
-        - Sessions
-      summary: Create a WAITING game lobby
+      tags: [Question Sets]
+      summary: Create a question set
+      description: The owner is the caller. Extra body fields are ignored.
       security:
         - bearerAuth: []
       requestBody:
@@ -327,41 +870,260 @@ paths:
           application/json:
             schema:
               type: object
-              required:
-                - question_set_id
+              required: [name]
+              properties:
+                name:
+                  type: string
+                  minLength: 3
+                  maxLength: 100
+                  example: Biology Basics
+            example:
+              name: Biology Basics
+      responses:
+        "201":
+          description: Created question set
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuestionSet"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          description: The set name is already taken
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: NAME_TAKEN
+                  message: A question set with this name already exists.
+  /question-sets/{id}:
+    get:
+      tags: [Question Sets]
+      summary: Get a question set
+      description: include=questions is the only supported include value.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/QuestionSetId"
+        - name: include
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [questions]
+      responses:
+        "200":
+          description: Question set
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuestionSet"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          description: The question set does not exist
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: QUESTION_SET_NOT_FOUND
+                  message: Question set not found.
+    patch:
+      tags: [Question Sets]
+      summary: Rename a question set
+      description: The owner or an ADMIN may rename a set; renaming a set used by a game is allowed.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/QuestionSetId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+                  minLength: 3
+                  maxLength: 100
+                  example: Biology Review
+            example:
+              name: Biology Review
+      responses:
+        "200":
+          description: Renamed question set
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuestionSet"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          description: The set belongs to another host
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: FORBIDDEN
+                  message: This question set belongs to another host.
+        "404":
+          description: The question set does not exist
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: QUESTION_SET_NOT_FOUND
+                  message: Question set not found.
+        "409":
+          description: The renamed set name is already taken
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: NAME_TAKEN
+                  message: A question set with this name already exists.
+    delete:
+      tags: [Question Sets]
+      summary: Delete an unused question set
+      description: The owner or an ADMIN may delete a set; used sets cannot be deleted and their questions and choices are removed only with the set.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/QuestionSetId"
+      responses:
+        "204":
+          description: Question set deleted
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          description: The question set does not exist
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: QUESTION_SET_NOT_FOUND
+                  message: Question set not found.
+        "409":
+          description: The set is used by a game
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: QUESTION_SET_IN_USE
+                  message: This question set is used by a game.
+  /sessions:
+    post:
+      tags: [Sessions]
+      summary: Create a game lobby
+      description: HOST or ADMIN only. The server picks the six-digit join code; a client-sent join_code is ignored.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [question_set_id]
               properties:
                 question_set_id:
                   type: integer
                   minimum: 1
+                  example: 1
+            example:
+              question_set_id: 1
       responses:
         "201":
-          description: The new lobby and its six-digit code
+          description: Waiting session lobby
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Session"
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
           $ref: "#/components/responses/Unauthorized"
+        "403":
+          description: The account is not HOST or ADMIN
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: FORBIDDEN
+                  message: HOST or ADMIN role required.
+        "404":
+          description: The question set does not exist
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: QUESTION_SET_NOT_FOUND
+                  message: Question set not found.
   /sessions/{code}:
     parameters:
-      - name: code
-        in: path
-        required: true
-        schema:
-          type: string
-          pattern: "^[1-9][0-9]{5}$"
+      - $ref: "#/components/parameters/SessionCode"
     get:
-      tags:
-        - Sessions
-      summary: Read a game by its join code
+      tags: [Sessions]
+      summary: Get a lobby or game session
+      description: Public; no account is required.
+      security: []
       responses:
         "200":
-          description: The public session summary
+          description: Session state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Session"
+        "400":
+          $ref: "#/components/responses/BadRequest"
         "404":
-          $ref: "#/components/responses/NotFound"
+          description: The session does not exist
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: SESSION_NOT_FOUND
+                  message: Session not found.
     patch:
-      tags:
-        - Sessions
-      summary: Start or manually finish a game
-      description: Starting requires 2–4 seated players; a game otherwise finishes automatically when all players finish.
+      tags: [Sessions]
+      summary: Change a session status
+      description: HOST or ADMIN only. WAITING to PLAYING needs 2 to 4 seated players; WAITING or PLAYING can move to FINISHED.
       security:
         - bearerAuth: []
       requestBody:
@@ -370,40 +1132,84 @@ paths:
           application/json:
             schema:
               type: object
-              required:
-                - status
+              required: [status]
               properties:
                 status:
                   type: string
                   enum: [PLAYING, FINISHED]
+            example:
+              status: PLAYING
       responses:
         "200":
-          description: The updated session
+          description: Updated session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Session"
         "400":
           $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
+        "404":
+          description: The session does not exist
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: SESSION_NOT_FOUND
+                  message: Session not found.
         "409":
-          description: NOT_ENOUGH_PLAYERS or INVALID_STATUS_TRANSITION
+          description: The player count or status transition is invalid
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                players:
+                  value:
+                    error:
+                      code: NOT_ENOUGH_PLAYERS
+                      message: A game needs 2 to 4 seated players to start.
+                transition:
+                  value:
+                    error:
+                      code: INVALID_STATUS_TRANSITION
+                      message: This status transition is not allowed.
   /sessions/{code}/players:
     parameters:
-      - name: code
-        in: path
-        required: true
-        schema:
-          type: string
-          pattern: "^[1-9][0-9]{5}$"
+      - $ref: "#/components/parameters/SessionCode"
     get:
-      tags:
-        - Sessions
-      summary: List seats in a game
+      tags: [Sessions]
+      summary: List seated players
+      description: Public and ordered by board position.
+      security: []
       responses:
         "200":
-          description: Players ordered by board position
+          description: Session and seated players
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlayersList"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          description: The session does not exist
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: SESSION_NOT_FOUND
+                  message: Session not found.
     post:
-      tags:
-        - Sessions
-      summary: Join a lobby or rejoin an existing seat
+      tags: [Sessions]
+      summary: Join or rejoin a session
+      description: One account may be seated in only one PLAYING game at a time. A returning account always gets its seat back, including after the game finishes.
       security:
         - bearerAuth: []
       requestBody:
@@ -416,54 +1222,118 @@ paths:
               properties:
                 nickname:
                   type: string
+                  minLength: 2
+                  maxLength: 24
+                  example: Bea
                 avatar_color:
                   type: string
                   enum: [RED, BLUE, GREEN, YELLOW]
+                  example: BLUE
+            example:
+              nickname: Bea
+              avatar_color: BLUE
       responses:
-        "200":
-          description: The existing seat
         "201":
-          description: The new seat
+          description: New seat
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JoinResponse"
+        "200":
+          description: Returning seat rejoined
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JoinResponse"
         "400":
           $ref: "#/components/responses/BadRequest"
-        "403":
-          $ref: "#/components/responses/Forbidden"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          description: The session does not exist
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: SESSION_NOT_FOUND
+                  message: Session not found.
         "409":
-          $ref: "#/components/responses/Conflict"
+          description: The join conflicts with the session or account state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                seated:
+                  value:
+                    error:
+                      code: ALREADY_IN_GAME
+                      message: This account is seated in another PLAYING game.
+                ended:
+                  value:
+                    error:
+                      code: SESSION_ENDED
+                      message: This session has ended.
+                waiting:
+                  value:
+                    error:
+                      code: SESSION_NOT_JOINABLE
+                      message: This session is not accepting players.
+                full:
+                  value:
+                    error:
+                      code: SESSION_FULL
+                      message: This session already has four players.
+                nickname:
+                  value:
+                    error:
+                      code: NICKNAME_TAKEN
+                      message: This nickname is already taken.
+                avatar:
+                  value:
+                    error:
+                      code: AVATAR_COLOR_TAKEN
+                      message: This avatar color is already taken.
   /sessions/{code}/state:
     get:
-      tags:
-        - Sessions
-      summary: Read public gameplay state
-      description: Applies one expired timeout lazily. Returns no internal session identifier.
+      tags: [Gameplay]
+      summary: Get live game state
+      description: Public. The server lazily applies one expired timeout for roll 10 seconds, question 15 seconds, or punish 10 seconds.
+      security: []
       parameters:
-        - name: code
-          in: path
-          required: true
-          schema:
-            type: string
-            pattern: "^[1-9][0-9]{5}$"
+        - $ref: "#/components/parameters/SessionCode"
       responses:
         "200":
-          description: Current player, phase, seconds remaining, and player positions
+          description: Current game state without a session_id
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GameState"
+        "400":
+          $ref: "#/components/responses/BadRequest"
         "404":
-          $ref: "#/components/responses/NotFound"
+          description: The session does not exist
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: SESSION_NOT_FOUND
+                  message: Session not found.
   /sessions/{code}/roll:
     post:
-      tags:
-        - Sessions
-      summary: Roll and move the current player
-      description: The server rolls the die. Optional dice/event fields are test-only and ignored in production.
+      tags: [Gameplay]
+      summary: Roll and resolve the current turn
+      description: The seated current player only. dice and event are test-only overrides outside production.
       security:
         - bearerAuth: []
       parameters:
-        - name: code
-          in: path
-          required: true
-          schema:
-            type: string
-            pattern: "^[1-9][0-9]{5}$"
+        - $ref: "#/components/parameters/SessionCode"
       requestBody:
+        required: false
         content:
           application/json:
             schema:
@@ -473,58 +1343,138 @@ paths:
                   type: integer
                   minimum: 1
                   maximum: 6
+                  description: Test-only override; ignored in production
                 event:
                   type: string
                   enum: [QUESTION, PUNISHMENT]
+                  description: Test-only override; ignored in production
+            example:
+              dice: 3
+              event: QUESTION
       responses:
         "200":
-          description: Dice result, movement, tile, and next phase
+          description: Roll and movement result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RollResult"
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
           $ref: "#/components/responses/Unauthorized"
         "403":
-          $ref: "#/components/responses/Forbidden"
+          description: The account is not seated in this game
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: NOT_SEATED
+                  message: You are not seated in this game.
+        "404":
+          description: The session does not exist
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: SESSION_NOT_FOUND
+                  message: Session not found.
         "409":
-          description: GAME_NOT_PLAYING, NOT_YOUR_TURN, or WRONG_PHASE
+          description: The game or turn phase is not ready for a roll
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                playing:
+                  value:
+                    error:
+                      code: GAME_NOT_PLAYING
+                      message: The game is not playing.
+                turn:
+                  value:
+                    error:
+                      code: NOT_YOUR_TURN
+                      message: It is not your turn.
+                phase:
+                  value:
+                    error:
+                      code: WRONG_PHASE
+                      message: The game is not in the roll phase.
   /sessions/{code}/question:
     get:
-      tags:
-        - Sessions
-      summary: Read the current player's pending question
-      description: Returns four choices without revealing the correct choice.
+      tags: [Gameplay]
+      summary: Get the pending question
+      description: The current player in QUESTION phase only. The response never includes is_correct.
       security:
         - bearerAuth: []
       parameters:
-        - name: code
-          in: path
-          required: true
-          schema:
-            type: string
-            pattern: "^[1-9][0-9]{5}$"
+        - $ref: "#/components/parameters/SessionCode"
       responses:
         "200":
-          description: Question text, four choices, and seconds remaining
+          description: Pending question with choices
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PendingQuestion"
+        "400":
+          $ref: "#/components/responses/BadRequest"
         "401":
           $ref: "#/components/responses/Unauthorized"
         "403":
-          $ref: "#/components/responses/Forbidden"
+          description: The account is not seated in this game
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: NOT_SEATED
+                  message: You are not seated in this game.
+        "404":
+          description: The session does not exist
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: SESSION_NOT_FOUND
+                  message: Session not found.
         "409":
-          description: GAME_NOT_PLAYING, NOT_YOUR_TURN, or WRONG_PHASE
+          description: The game or turn phase is not ready for a question
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                playing:
+                  value:
+                    error:
+                      code: GAME_NOT_PLAYING
+                      message: The game is not playing.
+                turn:
+                  value:
+                    error:
+                      code: NOT_YOUR_TURN
+                      message: It is not your turn.
+                phase:
+                  value:
+                    error:
+                      code: WRONG_PHASE
+                      message: The game is not in the question phase.
   /sessions/{code}/answers:
     post:
-      tags:
-        - Sessions
+      tags: [Gameplay]
       summary: Answer the pending question
+      description: The current player in QUESTION phase only. A correct answer moves +2; a wrong answer moves -2.
       security:
         - bearerAuth: []
       parameters:
-        - name: code
-          in: path
-          required: true
-          schema:
-            type: string
-            pattern: "^[1-9][0-9]{5}$"
+        - $ref: "#/components/parameters/SessionCode"
       requestBody:
         required: true
         content:
@@ -537,31 +1487,75 @@ paths:
                   type: integer
                   minimum: 1
                   maximum: 4
+            example:
+              choice_index: 2
       responses:
         "200":
-          description: Answer result and movement
+          description: Answer result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnswerResult"
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
           $ref: "#/components/responses/Unauthorized"
         "403":
-          $ref: "#/components/responses/Forbidden"
+          description: The account is not seated in this game
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: NOT_SEATED
+                  message: You are not seated in this game.
+        "404":
+          description: The session does not exist
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: SESSION_NOT_FOUND
+                  message: Session not found.
         "409":
-          description: ANSWER_TOO_LATE, GAME_NOT_PLAYING, NOT_YOUR_TURN, or WRONG_PHASE
+          description: The answer deadline or turn phase is invalid
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                late:
+                  value:
+                    error:
+                      code: ANSWER_TOO_LATE
+                      message: The answer deadline has passed.
+                playing:
+                  value:
+                    error:
+                      code: GAME_NOT_PLAYING
+                      message: The game is not playing.
+                turn:
+                  value:
+                    error:
+                      code: NOT_YOUR_TURN
+                      message: It is not your turn.
+                phase:
+                  value:
+                    error:
+                      code: WRONG_PHASE
+                      message: The game is not in the question phase.
   /sessions/{code}/punish:
     post:
-      tags:
-        - Sessions
-      summary: Apply a punishment to another unfinished player
+      tags: [Gameplay]
+      summary: Punish another unfinished player
+      description: The current player in PUNISH phase only. Target player and deduction must be another unfinished seat and 1-6.
       security:
         - bearerAuth: []
       parameters:
-        - name: code
-          in: path
-          required: true
-          schema:
-            type: string
-            pattern: "^[1-9][0-9]{5}$"
+        - $ref: "#/components/parameters/SessionCode"
       requestBody:
         required: true
         content:
@@ -577,31 +1571,78 @@ paths:
                   type: integer
                   minimum: 1
                   maximum: 6
+            example:
+              target_player_id: 2
+              amount: 3
       responses:
         "200":
-          description: The target's movement and next phase
+          description: Punishment result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PunishResult"
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
           $ref: "#/components/responses/Unauthorized"
         "403":
-          $ref: "#/components/responses/Forbidden"
+          description: The account is not seated in this game
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: NOT_SEATED
+                  message: You are not seated in this game.
+        "404":
+          description: The session does not exist
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: SESSION_NOT_FOUND
+                  message: Session not found.
         "409":
-          description: INVALID_TARGET, GAME_NOT_PLAYING, NOT_YOUR_TURN, or WRONG_PHASE
+          description: Target or turn phase is invalid
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                target:
+                  value:
+                    error:
+                      code: INVALID_TARGET
+                      message: Choose another unfinished player in this game.
+                playing:
+                  value:
+                    error:
+                      code: GAME_NOT_PLAYING
+                      message: The game is not playing.
+                turn:
+                  value:
+                    error:
+                      code: NOT_YOUR_TURN
+                      message: It is not your turn.
+                phase:
+                  value:
+                    error:
+                      code: WRONG_PHASE
+                      message: The game is not in the punishment phase.
   /sessions/{code}/leaderboard:
     get:
-      tags:
-        - Sessions
-      summary: Read finish order and current player positions
+      tags: [Gameplay]
+      summary: Get the session leaderboard
+      description: Public. Finishers are first by finish_position, then unfinished players by board position.
+      security: []
       parameters:
-        - name: code
-          in: path
-          required: true
-          schema:
-            type: string
-            pattern: "^[1-9][0-9]{5}$"
+        - $ref: "#/components/parameters/SessionCode"
         - name: limit
           in: query
+          required: false
           schema:
             type: integer
             minimum: 1
@@ -609,8 +1650,348 @@ paths:
             default: 10
       responses:
         "200":
-          description: Finishers by finish position, then unfinished players by position
+          description: Ranked players
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Leaderboard"
         "400":
           $ref: "#/components/responses/BadRequest"
         "404":
-          $ref: "#/components/responses/NotFound"
+          description: The session does not exist
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: SESSION_NOT_FOUND
+                  message: Session not found.
+  /question-sets/{id}/cover:
+    put:
+      tags: [Question Sets]
+      summary: Upload or replace a question-set cover
+      description: OWNER or ADMIN only. PNG or JPEG, maximum 1 MB. The server renames the file. Covers may change even when the set is used.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/QuestionSetId"
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [cover]
+              properties:
+                cover:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: Updated question set
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuestionSet"
+        "400":
+          description: Cover missing, invalid, or upload malformed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                required:
+                  value:
+                    error:
+                      code: COVER_REQUIRED
+                      message: cover is required
+                invalid:
+                  value:
+                    error:
+                      code: INVALID_FILE_TYPE
+                      message: cover must be PNG or JPEG
+                upload:
+                  value:
+                    error:
+                      code: INVALID_UPLOAD
+                      message: The cover upload is invalid.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          description: The question set does not exist
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: QUESTION_SET_NOT_FOUND
+                  message: Question set not found.
+        "413":
+          description: The uploaded file is larger than 1 MB
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: FILE_TOO_LARGE
+                  message: Cover file must be 1 MB or smaller.
+  /question-sets/{id}/questions:
+    get:
+      tags: [Questions]
+      summary: List questions in a set
+      description: HOST or ADMIN only. Questions are ordered by position.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/QuestionSetId"
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: Paged question data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuestionEnvelope"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          description: The question set does not exist
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: QUESTION_SET_NOT_FOUND
+                  message: Question set not found.
+    post:
+      tags: [Questions]
+      summary: Add a question to a set
+      description: OWNER or ADMIN only. A set may contain at most 100 questions and cannot be changed after use.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/QuestionSetId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [text, choices]
+              properties:
+                text:
+                  type: string
+                  minLength: 5
+                  maxLength: 300
+                choices:
+                  type: array
+                  minItems: 4
+                  maxItems: 4
+                  items:
+                    type: object
+                    required: [text, is_correct]
+                    properties:
+                      text:
+                        type: string
+                        minLength: 1
+                        maxLength: 120
+                      is_correct:
+                        type: boolean
+            example:
+              text: What is the largest planet?
+              choices:
+                - text: Earth
+                  is_correct: false
+                - text: Jupiter
+                  is_correct: true
+                - text: Mars
+                  is_correct: false
+                - text: Venus
+                  is_correct: false
+      responses:
+        "201":
+          description: Created question
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Question"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          description: The question set does not exist
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: QUESTION_SET_NOT_FOUND
+                  message: Question set not found.
+        "409":
+          description: The set is used, full, or has a position conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                inUse:
+                  value:
+                    error:
+                      code: QUESTION_SET_IN_USE
+                      message: This question set is used by a game.
+                limit:
+                  value:
+                    error:
+                      code: QUESTION_LIMIT_REACHED
+                      message: A question set cannot contain more than 100 questions.
+                position:
+                  value:
+                    error:
+                      code: POSITION_CONFLICT
+                      message: The requested question position conflicts with another question.
+  /question-sets/{id}/questions/{questionId}:
+    patch:
+      tags: [Questions]
+      summary: Replace or edit a question
+      description: Send text, choices, or both. Choices replace the whole choice list and must contain exactly one correct answer.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/QuestionSetId"
+        - $ref: "#/components/parameters/QuestionId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                text:
+                  type: string
+                  minLength: 5
+                  maxLength: 300
+                choices:
+                  type: array
+                  minItems: 4
+                  maxItems: 4
+                  items:
+                    type: object
+                    required: [text, is_correct]
+                    properties:
+                      text:
+                        type: string
+                        minLength: 1
+                        maxLength: 120
+                      is_correct:
+                        type: boolean
+            example:
+              text: Which planet is largest?
+              choices:
+                - text: Earth
+                  is_correct: false
+                - text: Jupiter
+                  is_correct: true
+                - text: Mars
+                  is_correct: false
+                - text: Venus
+                  is_correct: false
+      responses:
+        "200":
+          description: Updated question
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Question"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          description: The question set or question does not exist
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                set:
+                  value:
+                    error:
+                      code: QUESTION_SET_NOT_FOUND
+                      message: Question set not found.
+                question:
+                  value:
+                    error:
+                      code: QUESTION_NOT_FOUND
+                      message: Question not found.
+        "409":
+          description: Used sets cannot have questions edited
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: QUESTION_SET_IN_USE
+                  message: This question set is used by a game.
+    delete:
+      tags: [Questions]
+      summary: Delete a question
+      description: Used sets cannot have questions deleted.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/QuestionSetId"
+        - $ref: "#/components/parameters/QuestionId"
+      responses:
+        "204":
+          description: Question deleted
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          description: The question set or question does not exist
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                set:
+                  value:
+                    error:
+                      code: QUESTION_SET_NOT_FOUND
+                      message: Question set not found.
+                question:
+                  value:
+                    error:
+                      code: QUESTION_NOT_FOUND
+                      message: Question not found.
+        "409":
+          description: Used sets cannot have questions deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: QUESTION_SET_IN_USE
+                  message: This question set is used by a game.

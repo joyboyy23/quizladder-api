@@ -41,10 +41,10 @@ One entry per milestone, written the week you did it. Newest at the bottom.
 - AI tools: GitHub Copilot (agent mode) implemented this milestone from the user-provided gameplay requirements.
 
 ## M4 · Automated tests and server preparation
-- Dates worked: Nov 18, 2026 · Time spent: [student fills in hours]
+- Dates worked: Nov 18, 2026 · Time spent: 6 hours
 - Goal: Add deterministic automated coverage and prepare the API for a server environment with no demo seeders.
 - What I built: Jest unit suites and supertest HTTP suites in `tests/unit` and `tests/api`; 117 tests with 96.23% line coverage; shared test helpers in `tests/setup`; separate test-database configuration; URL/SSL database support; Helmet, CORS and trust proxy middleware; `start:render`; and on-demand librarian host creation.
-- Evidence: [student writes pull request link and hashes ...]
+- Evidence: https://github.com/joyboyy23/quizladder-api/pull/7 and https://github.com/joyboyy23/quizladder-api/pull/8 · 6b82a6e feat(app): add helmet, CORS allowlist and trust proxy; b4fd0a9 feat(config): support DATABASE_URL, DB_SSL and a separate test database; 4bbe7ac fix(sessions): create the librarian host on demand so POST /sessions works without seeders
 - Problem I hit: The old results example unit test ranked players by score, but this project ranks finishers by finish_position. A server database had no seeded librarian host, so creating a game could return 500. Tests also needed to avoid leaving accounts in games or changing seeded accounts.
 - How I solved it: I rewrote the stale results test with finish-position and incomplete-player cases. I made session creation find or create the librarian host when it is missing. I kept local separate database settings and used DATABASE_URL only for a server, while test runs use the _test database. I used freshly registered players in HTTP tests and finished games at the end when needed.
 - Decision I made and why: The host row is created on demand because Render does not run seeders, and live session creation otherwise fails with no librarian host. Tests use freshly registered players instead of changing seeded accounts, and finish games at the end of suites. The stale score-based example unit test was replaced with finish-position ranking and board/game-rule tests. Cost: extra test setup and cleanup, plus separate test state isolation.
@@ -53,6 +53,16 @@ One entry per milestone, written the week you did it. Newest at the bottom.
 - AI tools: GitHub Copilot agent mode implemented this milestone from the user-provided guide.
 
 ## M5 · API documentation and deployment
+- Dates worked: Nov 21, 2026 · Time spent: [student writes ...]
+- Goal: Document every implemented endpoint accurately as OpenAPI 3.x, expose Swagger UI, enable documentation tests, and prepare the API for SE1 review.
+- What I built: Updated `src/docs/openapi.yaml` with 29 operations and exact component schemas, shared parameters and reusable error responses; added account, user, question-set, question, session and gameplay documentation; enabled `tests/api/docs.api.test.js`; and updated the package, changelog and README.
+- Evidence: [student writes pull request link and hashes ...]
+- Problem I hit: The starter specification contained stray YAML keys that are invalid as OpenAPI description fragments, plus stale Akalat Arena/game/card/password examples and a school-ID pattern that disagreed with the validator.
+- How I solved it: I moved fragment text into valid descriptions, removed the stray keys, and checked routes, controllers, validators and services before changing examples or schemas. I used the real QuizLadder game values, `^[A-Z0-9]{3,6}-[0-9]{3,5}$`, `Libro-2026`, and actual response fields and error codes.
+- Decision I made and why: Gameplay operations are grouped under the `Gameplay` tag so lobby and player management remain under `Sessions`; test-only dice and event overrides are documented and explicitly described as ignored in production.
+- Changes to my design set: none.
+- What I would explain to a classmate: [student writes ...]
+- AI tools: GitHub Copilot agent mode implemented this milestone from a plan written with Claude.
 
 ## M6 · The SE1 portfolio and the release
 
