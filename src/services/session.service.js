@@ -9,6 +9,8 @@ const questionSetService = require('./question-set.service');
 const { AppError, notFound, conflict } = require('../errors/app-error');
 
 const DEMO_HOST_USERNAME = 'librarian';
+// hosts.password_hash is NOT NULL, but nobody logs in as a host: logins use users.
+const HOST_PLACEHOLDER_HASH = 'no-login-service-account';
 const CODE_ATTEMPTS = 10;
 
 async function findOrFail(code) {
@@ -39,14 +41,8 @@ async function generateUniqueCode() {
 async function create(data) {
   await questionSetService.get(data.question_set_id);
 
-  const host = await hostRepository.findByUsername(DEMO_HOST_USERNAME);
-  if (!host) {
-    throw new AppError(
-      500,
-      'INTERNAL_ERROR',
-      'Demo host is missing. Re-seed the database.'
-    );
-  }
+  const host = await hostRepository.findByUsername(DEMO_HOST_USERNAME)
+    || await hostRepository.findOrCreateByUsername(DEMO_HOST_USERNAME, HOST_PLACEHOLDER_HASH);
 
   const board = await boardRepository.createWithTiles();
   const joinCode = await generateUniqueCode();

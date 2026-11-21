@@ -5,4 +5,9 @@ function findByUsername(username) {
   return Host.findOne({ where: { username } });
 }
 
-module.exports = { findByUsername };
+async function findOrCreateByUsername(username, passwordHash) {
+  const [host] = await Host.findOrCreate({ where: { username }, defaults: { password_hash: passwordHash } });
+  return host;
+}
+
+module.exports = { findByUsername, findOrCreateByUsername };
