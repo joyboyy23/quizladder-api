@@ -29,15 +29,15 @@ One entry per milestone, written the week you did it. Newest at the bottom.
 - AI tools: GitHub Copilot (agent mode) implemented this milestone from the user-provided plan PDF.
 
 ## M3 · Gameplay
-- Dates worked: Nov 17, 2026 · Time spent: [student writes the hours]
+- Dates worked: Nov 17, 2026 · Time spent: 8 hours
 - Goal: Implement multiplayer turns, board movement, event choices, timeouts, and finish order using persisted game state.
 - What I built: Reversible gameplay-state migration and seeded game setup; pure board/game rules; locked transactional gameplay services and repositories; validated state, roll, question, answer, punishment and leaderboard endpoints; deterministic Postman gameplay scenarios. Updated the README and API documentation for the rules and errors.
-- Evidence: [pull request link: add after opening the PR] · <commit hashes from `git log --oneline`>
-- Problem I hit: [student writes the problem]
-- How I solved it: [student writes the solution]
+- Evidence: https://github.com/joyboyy23/quizladder-api/pull/6 · 4c4df92 feat(db): add gameplay state to game_sessions and unique turn number; a88a2d6 feat(gameplay): add roll, question, answer, punish and timeout rules; f216efb feat(gameplay): add state, roll, answer, punish and leaderboard endpoints
+- Problem I hit: Check line J needs a finished game, but the server rolls random dice, so the Postman collection could not reach tile 100 by itself.
+- How I solved it: I added test-only optional `dice` and `event` on POST /roll, honoured only when NODE_ENV is not production. The fixed path [3,6,2,1,5,2,6] climbs four ladders, skips event tiles, and both players finish.
 - Decision I made and why: Gameplay state stays in the database; timeouts are applied lazily under the game-session lock so overlapping rolls cannot advance the same turn twice. Test dice/event overrides are ignored in production.
 - Changes to my design set: Added current player, phase, phase start, pending question and turn-number state; added turn-number uniqueness; the session finishes only after all players finish. Added gameplay endpoints and error codes.
-- What I would explain to a classmate: [student writes this in their own words]
+- What I would explain to a classmate: The server owns the dice and the clock, because anything the client sends can be edited.
 - AI tools: GitHub Copilot (agent mode) implemented this milestone from the user-provided gameplay requirements.
 
 ## M4 · Automated tests and server preparation
