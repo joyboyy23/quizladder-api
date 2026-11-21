@@ -10,12 +10,11 @@ const env = require('../config/env');
 pg.types.setTypeParser(1114, (value) => new Date(`${value.replace(' ', 'T')}Z`));
 const dbConfig = require('../config/database')[env.nodeEnv];
 
-const sequelize = new Sequelize(
-  dbConfig.database,
-  dbConfig.username,
-  dbConfig.password,
-  dbConfig
-);
+// One Sequelize instance for the whole API. A URL (Render) or separate settings (your computer).
+const { url, ...dbOptions } = dbConfig;
+const sequelize = url
+  ? new Sequelize(url, dbOptions)
+  : new Sequelize(dbConfig.database, dbConfig.username, dbConfig.password, dbConfig);
 
 // ============================================================
 // 1. LOAD ALL MODELS
