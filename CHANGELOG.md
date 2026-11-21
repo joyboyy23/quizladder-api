@@ -5,8 +5,11 @@ All notable changes, newest first.
 ## [x.y.z] (Weeks 15 to 16): [Your summary]
 - [Your change]
 
-## [x.y.z] (Week 14): [Your summary]
-- [Your change]
+## 1.4.0 (Week 14): tests and server preparation
+- Added Jest unit and supertest HTTP tests: 117 tests across mocked service suites and real API flows, with 96.23% line coverage.
+- Added DATABASE_URL and DB_SSL support, Helmet, CORS, trust proxy, and separate test database naming.
+- Added start:render for migrations and first-admin creation and named the Render blueprint quizladder services.
+- Added the host row on demand so live sessions can start without seeded demo data.
 
 ## 1.3.0 (Week 13): gameplay
 - Added transactional turn phases, server-side dice rolls, lazy timeout handling, question and punishment events, and automatic session completion
