@@ -53,15 +53,15 @@ One entry per milestone, written the week you did it. Newest at the bottom.
 - AI tools: GitHub Copilot agent mode implemented this milestone from the user-provided guide.
 
 ## M5 · API documentation and deployment
-- Dates worked: Nov 21, 2026 · Time spent: [student writes ...]
+- Dates worked: Nov 21, 2026 · Time spent: 7 hours
 - Goal: Document every implemented endpoint accurately as OpenAPI 3.x, expose Swagger UI, enable documentation tests, and prepare the API for SE1 review.
-- What I built: Updated `src/docs/openapi.yaml` with 29 operations and exact component schemas, shared parameters and reusable error responses; added account, user, question-set, question, session and gameplay documentation; enabled `tests/api/docs.api.test.js`; and updated the package, changelog and README.
-- Evidence: [student writes pull request link and hashes ...]
+- What I built: Updated `src/docs/openapi.yaml` with 29 operations and exact component schemas, shared parameters and reusable error responses; added account, user, question-set, question, session and gameplay documentation; enabled `tests/api/docs.api.test.js`; and updated the package, changelog and README. Added Render Blueprint deployment instructions, with `start:render` running migrations and creating the first admin without seeders; documented the free plan's sleep, database expiry and non-persistent uploads; and explained how to verify health and begin with an empty live database.
+- Evidence: 
 - Problem I hit: The starter specification contained stray YAML keys that are invalid as OpenAPI description fragments, plus stale Akalat Arena/game/card/password examples and a school-ID pattern that disagreed with the validator.
 - How I solved it: I moved fragment text into valid descriptions, removed the stray keys, and checked routes, controllers, validators and services before changing examples or schemas. I used the real QuizLadder game values, `^[A-Z0-9]{3,6}-[0-9]{3,5}$`, `Libro-2026`, and actual response fields and error codes.
 - Decision I made and why: Gameplay operations are grouped under the `Gameplay` tag so lobby and player management remain under `Sessions`; test-only dice and event overrides are documented and explicitly described as ignored in production.
 - Changes to my design set: none.
-- What I would explain to a classmate: [student writes ...]
+- What I would explain to a classmate: I learned that an OpenAPI spec describes each path and verb, including its inputs and possible responses. In this repo, `/results` uses `hubKey` because the Library Game Hub sends the `X-Hub-Key` header. `/question-sets` uses `bearerAuth`, so callers need a login token. Swagger UI turns this spec into a page where I can try documented endpoints.
 - AI tools: GitHub Copilot agent mode implemented this milestone from a plan written with Claude.
 
 ## M6 · The SE1 portfolio and the release
