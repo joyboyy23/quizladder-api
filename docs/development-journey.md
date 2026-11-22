@@ -17,7 +17,7 @@ One entry per milestone, written the week you did it. Newest at the bottom.
 - AI tools: I used Claude to plan draft the code, and use the free tier copilot in vscode to generate the Postman collection and debug any errors to the code.
 
 ## M2 · The question bank
-- Dates worked: Nov 17, 2026 · Time spent: [student writes the hours]
+- Dates worked: Nov 17, 2026 · Time spent: 6 hours
 - Goal: Give hosts a question bank: paged lists, nested questions and choices, and a cover upload.
 - What I built: migrations `db/migrations/20261117020000-add-owner-and-cover-to-question-sets.js` and `db/migrations/20261117020100-add-position-to-questions.js`; seeders `db/seeders/20261117020200-demo-question-set-owners.js` and `db/seeders/20261117020300-demo-question-positions.js`; ownership, cover and position model fields; `src/lib/cover-files.js`, `src/middlewares/owned-question-set.js`, and the `question.validator`, `question.repository`, `question.service`, and `question.controller` layers; updated question-set layers, session repository, routes and constraint map. Endpoints include paged/searchable `GET /question-sets`, `GET /question-sets/:id?include=questions`, nested question list/create/edit/delete, and `PUT /question-sets/:id/cover`. Updated the Postman collection, README and changelog.
 - Evidence: https://github.com/joyboyy23/quizladder-api/pull/5 · e601277 test(postman): add the question bank folder and fixtures; 53f194a feat(routes): add nested question routes, cover upload and position conflict; dfa6ed3 feat(questions): add nested questions with transactions
@@ -25,7 +25,7 @@ One entry per milestone, written the week you did it. Newest at the bottom.
 - How I solved it: I changed the script to resolve the effective `baseUrl`, then reran the check; all 120 Postman requests and 241 assertions passed.
 - Decision I made and why: Question sets have an owner (`owner_id`); only the owner or an ADMIN may change them, and a set used by a game is frozen. Cost: a seeded set needed an owner, so a new seeder assigns Faye.
 - Changes to my design set: ERD and data dictionary: `question_sets.owner_id` and `cover_picture`, `questions.position` (UNIQUE with `question_set_id`). Endpoint table: nested question routes, `include=questions`, cover upload.
-- What I would explain to a classmate: [student writes this in their own words]
+- What I would explain to a classmate: ?page and ?limit skip some rows and take the next ones. Every list answers with data and meta so the client knows the total and number of pages.
 - AI tools: GitHub Copilot (agent mode) implemented this milestone from the user-provided plan PDF.
 
 ## M3 · Gameplay
@@ -56,7 +56,7 @@ One entry per milestone, written the week you did it. Newest at the bottom.
 - Dates worked: Nov 21, 2026 · Time spent: 7 hours
 - Goal: Document every implemented endpoint accurately as OpenAPI 3.x, expose Swagger UI, enable documentation tests, and prepare the API for SE1 review.
 - What I built: Updated `src/docs/openapi.yaml` with 29 operations and exact component schemas, shared parameters and reusable error responses; added account, user, question-set, question, session and gameplay documentation; enabled `tests/api/docs.api.test.js`; and updated the package, changelog and README. Added Render Blueprint deployment instructions, with `start:render` running migrations and creating the first admin without seeders; documented the free plan's sleep, database expiry and non-persistent uploads; and explained how to verify health and begin with an empty live database.
-- Evidence: 
+- Evidence: https://github.com/joyboyy23/quizladder-api/pull/9 and https://github.com/joyboyy23/quizladder-api/pull/10 · 4d86ad1 feat(docs): document all 29 operations with schemas and error codes; c0809dd chore(docs): enable the docs API test; 2c58b94 docs(readme): add live API link, check badge and Deploying to Render section
 - Problem I hit: The starter specification contained stray YAML keys that are invalid as OpenAPI description fragments, plus stale Akalat Arena/game/card/password examples and a school-ID pattern that disagreed with the validator.
 - How I solved it: I moved fragment text into valid descriptions, removed the stray keys, and checked routes, controllers, validators and services before changing examples or schemas. I used the real QuizLadder game values, `^[A-Z0-9]{3,6}-[0-9]{3,5}$`, `Libro-2026`, and actual response fields and error codes.
 - Decision I made and why: Gameplay operations are grouped under the `Gameplay` tag so lobby and player management remain under `Sessions`; test-only dice and event overrides are documented and explicitly described as ignored in production.
@@ -65,5 +65,15 @@ One entry per milestone, written the week you did it. Newest at the bottom.
 - AI tools: GitHub Copilot agent mode implemented this milestone from a plan written with Claude.
 
 ## M6 · The SE1 portfolio and the release
+- Dates worked: Nov 22, 2026 · Time spent: 6 hours
+- Goal: Document the system as built, so another developer can use and continue it.
+- What I built: docs/technical-spec.md, docs/data-dictionary.md (generated by npm run docs:dictionary), docs/api-reference.md (generated by npm run docs:api), docs/user-guide.md, docs/se2-handoff.md, six PlantUML diagrams in docs/diagrams/, README and CHANGELOG updates, version 1.6.0.
+- Evidence: https://github.com/joyboyy23/quizladder-api/pull/11 · fd36d26 chore: add docs scripts and bump version to 1.6.0; c0e81b2 docs: generate data dictionary and API reference
+- Problem I hit: The package version was already 1.5.0, so the module's v1.0.0 tag would have gone backwards. Also, Newman first showed all 163 requests failing because the API was not running.
+- How I solved it: I bumped the version to 1.6.0 and will tag v1.6.0 so package.json, the changelog and the tag agree. For Newman I reset the database with npm run db:reset, started the API, and reran; 163 requests and 324 assertions passed with 0 failed.
+- Decision I made and why: I generated the data dictionary and API reference from the database and OpenAPI file so they cannot disagree with the code. The cost is that I must rerun the scripts after every migration or OpenAPI change.
+- Changes to my design set: The six diagrams were redrawn to match what is built (users.password_hash, players.user_id, question_sets.owner_id and cover_picture, questions.position, and the gameplay-state columns on game_sessions).
+- What I would explain to a classmate: The server, not the client, rolls the dice and measures the clock. Anything the client sends can be edited, so those choices stay on the server.
+- AI tools: I used Claude to plan the milestone and write the PlantUML for the diagrams, and GitHub Copilot to draft the document descriptions. I reviewed and edited them against the code.
 
 ## M7 · The Test Report

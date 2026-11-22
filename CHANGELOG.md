@@ -2,8 +2,13 @@
 
 All notable changes, newest first.
 
-## [x.y.z] (Weeks 15 to 16): [Your summary]
-- [Your change]
+## 1.6.0 (Week 16): SE1 portfolio and release
+- Added the five portfolio documents in docs/: technical specification, data dictionary, API reference, user guide and SE2 handoff.
+- Added the six diagrams in docs/diagrams/: use case, class, sequence, activity, ERD and architecture.
+- Added the docs:dictionary and docs:api scripts. The data dictionary is generated from the real database and the API reference from src/docs/openapi.yaml.
+- Updated the README with a documentation section, the full environment variable list, demo accounts and the current test results.
+- Current results: Jest 123 tests in 17 files with 96.23% line coverage; Postman 163 requests and 324 tests, all passing on a fresh database.
+- Bumped the version to 1.6.0 in package.json, package-lock.json and the OpenAPI examples.
 
 ## 1.5.0 (Week 15): API documentation
 - Added a complete OpenAPI 3.0.3 document for 29 operations, including account, question-set, question, session and gameplay endpoints.
