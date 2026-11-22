@@ -4,12 +4,23 @@ Live API: https://quizladder-joyboyy23.onrender.com/api/v1
 [![check](https://github.com/joyboyy23/quizladder-api/actions/workflows/check.yml/badge.svg)](https://github.com/joyboyy23/quizladder-api/actions/workflows/check.yml)
 
 Backend API for QuizLadder, a tournament game for the SorSU Bulan Campus library.
-CS 313 Software Engineering 1, A.Y. 2026-2027.
+CS 313 Software Engineering 1, A.Y. 2026-2027. Version 1.6.0.
 
 - Developer: Joenilo F. Estillero (joyboyy23), BSCS 3-1
 - Group and game concept: Team 8, QuizLadder
 
 This is my own build of my group's game concept. Every commit in this repository was made by me, with Git, on my own computer or in my own Codespace.
+
+## Documentation
+
+- [Technical specification](docs/technical-spec.md)
+- [Data dictionary](docs/data-dictionary.md)
+- [API reference](docs/api-reference.md)
+- [User guide](docs/user-guide.md)
+- [SE2 handoff](docs/se2-handoff.md)
+- [Development journey](docs/development-journey.md)
+- [Changelog](CHANGELOG.md)
+- The six diagrams (use case, class, sequence, activity, ERD, architecture) are in `docs/diagrams/`.
 
 ## Tech stack
 
@@ -19,6 +30,9 @@ This is my own build of my group's game concept. Every commit in this repository
 | Web framework | Express 5 |
 | Database | PostgreSQL 16 or newer |
 | ORM and migrations | Sequelize 6 with sequelize-cli |
+| Security | bcryptjs, jsonwebtoken, helmet, cors |
+| Tests | Jest and supertest |
+| Documentation | OpenAPI 3 with Swagger UI |
 
 ## Setup
 
@@ -28,7 +42,7 @@ cd quizladder-api
 npm install
 ```
 
-Copy `.env.example` to `.env`, then put your own PostgreSQL password in `DB_PASSWORD`.
+Copy `.env.example` to `.env`, then put your own PostgreSQL password in `DB_PASSWORD` and your own random value in `JWT_SECRET`.
 
 ```
 npm run db:create     (first time only)
@@ -50,6 +64,13 @@ npm run dev
 | DB_USER | postgres | Database user |
 | DB_PASSWORD | (your own) | Database password. Never commit this. |
 | HUB_API_KEY | dev-hub-key | Key the Library Game Hub sends to read results. The library gives the real one at deployment. |
+| JWT_SECRET | (64 random hex characters) | Signs login tokens. Never commit it. |
+| JWT_EXPIRES_IN | 1h | How long a login token lasts |
+| CORS_ORIGINS | http://localhost:5173 | Browser origins allowed to read answers, separated by commas |
+| DATABASE_URL | (set by Render) | Server database connection. When set, the five DB_ keys are not needed. |
+| DB_SSL | true | Use an encrypted database connection when the server requires it |
+| ADMIN_SCHOOL_ID | ADM-0001 | School ID of the first admin on a server (used once by `create-admin`) |
+| ADMIN_PASSWORD | (12 or more characters) | Password of the first admin on a server. Never commit it. |
 
 ## Endpoints (Hub Contract v1.3)
 
@@ -69,11 +90,13 @@ When the API is running locally, Swagger UI is available at `http://localhost:30
 
 Live Swagger UI: https://quizladder-joyboyy23.onrender.com/api/v1/docs/
 
-In Swagger UI, call `POST /auth/login`, copy the returned bearer token, click **Authorize**, and enter `Bearer <token>` for protected endpoints. For Hub Contract results, use the `X-Hub-Key` header; locally the key is `dev-hub-key`. The live Swagger UI link is listed above.
+In Swagger UI, call `POST /auth/login`, copy the returned bearer token, click **Authorize**, and enter the token for protected endpoints. For Hub Contract results, use the `X-Hub-Key` header; locally the key is `dev-hub-key`.
+
+The printed version of this reference is in [docs/api-reference.md](docs/api-reference.md).
 
 ## Authentication
 
-Register and log in through `/auth/register` and `/auth/login`. Send the returned token as `Authorization: Bearer <token>` on protected requests. Question-set routes require a HOST or ADMIN account.
+Register and log in through `/auth/register` and `/auth/login`. Send the returned token as `Authorization: Bearer <token>` on protected requests. A new account is always a PLAYER; an ADMIN can promote it to HOST. Question-set routes, and creating or changing sessions, require a HOST or ADMIN account.
 
 ## Module 1 endpoints (question sets)
 
@@ -156,16 +179,6 @@ Gameplay errors include `409 GAME_NOT_PLAYING`, `NOT_YOUR_TURN`, `WRONG_PHASE`, 
 
 The merged `postman/QuizLadder.postman_collection.json` includes a **Play a whole game** folder with deterministic non-production dice/event scenarios.
 
-Demo school IDs for Postman (`postman/QuizLadder.postman_collection.json`), after a fresh `npm run db:reset`:
-
-| Header | Account | Useful for |
-|---|---|---|
-| `FAC-0042` | Faye Bautista (HOST) | Create / start / finish sessions (also seated in PLAYING `735104`) |
-| `2023-00456` | Ben Reyes | Clean join of a new lobby |
-| `2023-00789` / `2024-00111` | Carla / Dino | Extra free joiners (only in FINISHED `482913`) |
-| `2023-00123` | Ana Dela Cruz | In PLAYING `735104` — one-game + rejoin tests |
-| `2024-00222` | Eli Gonzales | Also in PLAYING `735104` (not a free joiner) |
-
 ## What "completed" means in my game
 
 A player has completed the game when they land exactly on tile 100 on the Snakes and Ladders board (a roll that goes past 100 bounces back) and their `finished_at` timestamp is recorded. The game session is marked as `FINISHED` when all players have finished, or when the host ends the game.
@@ -184,6 +197,21 @@ Every player who finishes scores 100, because they landed exactly on tile 100. T
 8. `game_sessions`
 9. `players` (one seat per account per game: `UNIQUE (session_id, user_id)`)
 10. `turns`
+
+## Demo accounts
+
+Every seeded account uses the demo password `quizladder`. These accounts exist only in the local and test databases. The live server is not seeded.
+
+Use these school IDs in Postman after a fresh `npm run db:reset`:
+
+| School ID | Account | Useful for |
+|---|---|---|
+| `ADM-0001` | Library Admin (ADMIN) | List accounts, change roles |
+| `FAC-0042` | Faye Bautista (HOST) | Create / start / finish sessions (also seated in PLAYING `735104`) |
+| `2023-00456` | Ben Reyes | Clean join of a new lobby |
+| `2023-00789` / `2024-00111` | Carla / Dino | Extra free joiners (only in FINISHED `482913`) |
+| `2023-00123` | Ana Dela Cruz | In PLAYING `735104` — one-game + rejoin tests |
+| `2024-00222` | Eli Gonzales | Also in PLAYING `735104` (not a free joiner) |
 
 ## Demo data
 
@@ -204,6 +232,8 @@ npm run test:coverage
 
 Unit tests live in `tests/unit`, HTTP tests live in `tests/api`, and shared setup/helpers live in `tests/setup`. HTTP tests use freshly registered accounts and never depend on passwords other than the seeded demo password or the passwords they register themselves.
 
+Current results: 123 Jest tests in 17 files, all passing, with 96.23% line coverage. The Postman collection has 163 requests and 324 tests, all passing on a fresh database (`npm run db:reset`, then `npx newman run postman/QuizLadder.postman_collection.json` with the API running).
+
 ## Running on a server
 
 Set `DATABASE_URL` for the server's PostgreSQL connection. `DB_SSL` enables encrypted PostgreSQL connections when required. Set `ADMIN_SCHOOL_ID` and `ADMIN_PASSWORD` once when starting a server; `npm run start:render` runs migrations, creates the first admin, and starts the API.
@@ -218,7 +248,7 @@ The free plan's web service sleeps after 15 minutes without activity and takes a
 
 Check that the API is up at `/api/v1/health`; a healthy response shows `"database": "up"`.
 
-Live database created: November 21. Expires 30 days after creation: [student writes the date].
+Live database created: November 21, 2026. Expires 30 days after creation: December 21, 2026.
 
 To start using an empty live database, log in as the admin, register accounts, and promote the host account.
 
@@ -231,4 +261,6 @@ To start using an empty live database, log in as the admin, register accounts, a
 | npm run db:seed | Loads the seed data |
 | npm run db:check | Counts the rows in every table |
 | npm run db:reset | Empties the database, rebuilds every table and reloads the seed data |
+| npm run docs:dictionary | Rewrites `docs/data-dictionary.md` from the real database and keeps your descriptions |
+| npm run docs:api | Rewrites `docs/api-reference.md` from `src/docs/openapi.yaml` |
 | npm run check | Runs the same automatic check that GitHub runs after every push |
