@@ -1,4 +1,4 @@
-# API reference: QuizLadder API 1.5.0
+# API reference: QuizLadder API 1.6.1
 
 Generated from `src/docs/openapi.yaml` by `npm run docs:api`. Base URL: `/api/v1`. Try every endpoint in Swagger UI at `/api/v1/docs/`.
 
