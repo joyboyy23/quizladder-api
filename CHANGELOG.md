@@ -2,6 +2,10 @@
 
 All notable changes, newest first.
 
+## 1.6.1 (Week 16): version fix
+
+- Fixed the version number so package.json, package-lock.json, the OpenAPI examples and the API reference all say 1.6.1.
+
 ## 1.6.0 (Week 16): SE1 portfolio and release
 - Added the five portfolio documents in docs/: technical specification, data dictionary, API reference, user guide and SE2 handoff.
 - Added the six diagrams in docs/diagrams/: use case, class, sequence, activity, ERD and architecture.

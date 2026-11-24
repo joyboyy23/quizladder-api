@@ -4,7 +4,7 @@ Live API: https://quizladder-joyboyy23.onrender.com/api/v1
 [![check](https://github.com/joyboyy23/quizladder-api/actions/workflows/check.yml/badge.svg)](https://github.com/joyboyy23/quizladder-api/actions/workflows/check.yml)
 
 Backend API for QuizLadder, a tournament game for the SorSU Bulan Campus library.
-CS 313 Software Engineering 1, A.Y. 2026-2027. Version 1.6.0.
+CS 313 Software Engineering 1, A.Y. 2026-2027. Version 1.6.1.
 
 - Developer: Joenilo F. Estillero (joyboyy23), BSCS 3-1
 - Group and game concept: Team 8, QuizLadder

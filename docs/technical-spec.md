@@ -1,6 +1,6 @@
 # Technical specification: QuizLadder API
 
-Version 1.6.0, SE1 final build. Developer: Joenilo F. Estillero (joyboyy23), BSCS 3-1. Group: Team 8.
+Version 1.6.1, SE1 final build. Developer: Joenilo F. Estillero (joyboyy23), BSCS 3-1. Group: Team 8.
 
 ## 1. Purpose and scope
 
