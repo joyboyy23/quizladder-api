@@ -20,6 +20,8 @@ This is my own build of my group's game concept. Every commit in this repository
 - [SE2 handoff](docs/se2-handoff.md)
 - [Development journey](docs/development-journey.md)
 - [Changelog](CHANGELOG.md)
+- Test report: [docs/test-report.pdf](docs/test-report.pdf)
+- Release: https://github.com/joyboyy23/quizladder-api/releases/tag/v1.6.1
 - The six diagrams (use case, class, sequence, activity, ERD, architecture) are in `docs/diagrams/`.
 
 ## Tech stack
@@ -233,6 +235,16 @@ npm run test:coverage
 Unit tests live in `tests/unit`, HTTP tests live in `tests/api`, and shared setup/helpers live in `tests/setup`. HTTP tests use freshly registered accounts and never depend on passwords other than the seeded demo password or the passwords they register themselves.
 
 Current results: 123 Jest tests in 17 files, all passing, with 96.23% line coverage. The Postman collection has 163 requests and 324 tests, all passing on a fresh database (`npm run db:reset`, then `npx newman run postman/QuizLadder.postman_collection.json` with the API running).
+
+## How to reproduce the test report
+
+```bash
+npm run db:reset
+npx newman run postman/QuizLadder.postman_collection.json
+npm run test:coverage
+```
+
+Start the API before the Newman run. The coverage HTML report is written under `coverage/`.
 
 ## Running on a server
 
